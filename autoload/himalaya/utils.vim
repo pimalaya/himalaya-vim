@@ -79,7 +79,6 @@ function! himalaya#utils#print_msg(msg)
   echom a:msg
 endfunction
 
-
 function! himalaya#utils#print_err(err)
   redraw
   echohl ErrorMsg

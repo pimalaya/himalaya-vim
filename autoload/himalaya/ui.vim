@@ -5,68 +5,25 @@ let s:print_err = function('himalaya#utils#print_err')
 
 let s:max_widths = []
 let s:buff_name = 'Himalaya'
-let s:tasks = []
-
-" ------------------------------------------------------------------- # Config #
+let s:msgs = []
 
 let s:config = {
-  \'info': {
-    \'columns': ['key', 'value'],
-    \'keys': ['id', 'desc', 'project', 'active', 'due', 'worktime', 'done', 'deleted'],
-  \},
   \'list': {
-    \'columns': ['id', 'desc', 'project', 'active', 'due'],
-  \},
-  \'worktime': {
-    \'columns': ['date', 'worktime'],
+    \'columns': ['uid', 'subject', 'sender', 'date'],
   \},
   \'labels': {
-    \'active': 'ACTIVE',
+    \'uid': 'ID',
+    \'subject': 'SUBJECT',
+    \'sender': 'SENDER',
     \'date': 'DATE',
-    \'deleted': 'DELETED',
-    \'desc': 'DESC',
-    \'done': 'DONE',
-    \'due': 'DUE',
-    \'id': 'ID',
-    \'key': 'KEY',
-    \'project': 'PROJECT',
-    \'total': 'TOTAL',
-    \'total_raw': 'TOTAL RAW',
-    \'total_wday': 'TOTAL WDAY',
-    \'value': 'VALUE',
-    \'worktime': 'WORKTIME',
   \},
 \}
-
-" --------------------------------------------------------------------- # Show #
-
-function! himalaya#ui#show()
-  try
-    let id = s:get_focused_task_id()
-    let task = himalaya#task#info(id)
-    let lines = map(
-      \copy(s:config.info.keys),
-      \'{"key": s:config.labels[v:val], "value": task[v:val]}',
-    \)
-
-    silent! bwipeout 'Himalaya show'
-    silent! botright new Himalaya show
-
-    call append(0, s:render('info', lines))
-    normal! ddgg
-    setlocal filetype=himalaya-show
-  catch
-    call s:print_err(v:exception)
-  endtry
-endfunction
-
-" --------------------------------------------------------------------- # List #
 
 function! himalaya#ui#list()
   try
     let prev_pos = getpos('.')
-    let s:tasks = himalaya#task#list()
-    let lines = map(copy(s:tasks), 'himalaya#task#format_for_list(v:val)')
+    let s:msgs = himalaya#msg#list()
+    let lines = map(copy(s:msgs), 'himalaya#msg#format_for_list(v:val)')
 
     redir => buf_list | silent! ls | redir END
     execute 'silent! edit ' . s:buff_name
@@ -86,107 +43,7 @@ function! himalaya#ui#list()
   endtry
 endfunction
 
-function! himalaya#ui#list_done()
-  try
-    let prev_pos = getpos('.')
-    let s:tasks = himalaya#task#list_done()
-    let lines = map(copy(s:tasks), 'himalaya#task#format_for_list(v:val)')
-
-    silent! bwipeout 'Himalaya done tasks'
-    silent! botright new Himalaya done tasks
-
-    call append(0, s:render('list', lines))
-    execute '$d'
-    call setpos('.', prev_pos)
-    setlocal filetype=himalaya-list-ro
-    let &modified = 0
-  catch
-    call s:print_err(v:exception)
-  endtry
-endfunction
-
-function! himalaya#ui#list_deleted()
-  try
-    let prev_pos = getpos('.')
-    let s:tasks = himalaya#task#list_deleted()
-    let lines = map(copy(s:tasks), 'himalaya#task#format_for_list(v:val)')
-
-    silent! bwipeout 'Himalaya deleted tasks'
-    silent! botright new Himalaya deleted tasks
-
-    call append(0, s:render('list', lines))
-    execute '$d'
-    call setpos('.', prev_pos)
-    setlocal filetype=himalaya-list-ro
-    let &modified = 0
-  catch
-    call s:print_err(v:exception)
-  endtry
-endfunction
-
-" ------------------------------------------------------------------- # Toggle #
-
-function! himalaya#ui#toggle()
-  try
-    let id = s:get_focused_task_id()
-    let msg = himalaya#task#toggle(id)
-    call himalaya#ui#list()
-    call s:print_msg(msg)
-  catch
-    call s:print_err(v:exception)
-  endtry
-endfunction
-
-" ------------------------------------------------------------------ # Context #
-
-function! himalaya#ui#context_completion(val, cmdline, curpos)
-  return filter(himalaya#task#context_completion(), "stridx(v:val, a:val) > -1")
-endfunction
-
-function! himalaya#ui#context()
-  try
-    let ctx = input("Go to context: ", "", "customlist,himalaya#ui#context_completion")
-    let msg = himalaya#task#context(ctx)
-    call himalaya#ui#list()
-    call s:print_msg(msg)
-  catch
-    call s:print_err(v:exception)
-  endtry
-endfunction
-
-" ----------------------------------------------------------------- # Worktime #
-
-function! himalaya#ui#worktime()
-  try
-    let proj = input("Worktime for: ", "", "customlist,himalaya#ui#context_completion")
-    let wtimes = himalaya#task#worktime(proj)
-    let wtimes_lines = map(
-      \copy(wtimes.worktimes),
-      \'{"date": v:val.date, "worktime": v:val.total.full}',
-    \)
-    let empty_line = {"date": "---", "worktime": "---"}
-    let total_raw_line = {
-      \"date": s:config.labels.total_raw,
-      \"worktime": wtimes.total.full,
-    \}
-    let total_wday_line = {
-      \"date": s:config.labels.total_wday,
-      \"worktime": wtimes.totalWday.full,
-    \}
-    let lines = wtimes_lines + [empty_line, total_raw_line, total_wday_line]
-
-    silent! bwipeout 'Himalaya wtime'
-    silent! botright new Himalaya wtime
-
-    call append(0, s:render('worktime', lines))
-    normal! ddgg
-    setlocal filetype=himalaya-wtime
-  catch
-    call s:print_err(v:exception)
-  endtry
-endfunction
-
-" ---------------------------------------------------------- # Cell management #
+" Cell management
 
 function! himalaya#ui#select_next_cell()
   normal! f|l
@@ -221,35 +78,35 @@ function! himalaya#ui#visual_in_cell()
   execute printf('normal! %svt|', col('.') == 1 ? '' : 'T|')
 endfunction
 
-" -------------------------------------------------------------- # Parse utils #
+" Parse utils
 
 function! himalaya#ui#parse_buffer()
   " try
-    let lines = filter(getline(2, "$"), "!empty(s:trim(v:val))")
-    let prev_tasks = copy(s:tasks)
-    let next_tasks = map(lines, "s:parse_buffer_line(v:key, v:val)")
-    let tasks_to_add = filter(copy(next_tasks), "empty(v:val.id)")
-    let tasks_to_edit = []
-    let tasks_to_do = []
-    let msgs = []
+    " let lines = filter(getline(2, "$"), "!empty(s:trim(v:val))")
+    " let prev_msgs = copy(s:msgs)
+    " let next_msgs = map(lines, "s:parse_buffer_line(v:key, v:val)")
+    " let msgs_to_add = filter(copy(next_msgs), "empty(v:val.id)")
+    " let msgs_to_edit = []
+    " let msgs_to_do = []
+    " let msgs = []
 
-    for prev_task in prev_tasks
-      let next_task = filter(copy(next_tasks), "v:val.id == prev_task.id")
+    " for prev_msg in prev_msgs
+    "   let next_msg = filter(copy(next_msgs), "v:val.id == prev_msg.id")
 
-      if empty(next_task)
-        let tasks_to_do += [prev_task.id]
-      elseif prev_task.desc != next_task[0].desc || prev_task.project != next_task[0].project || prev_task.due.approx != next_task[0].due
-        let tasks_to_edit += [next_task[0]]
-      endif
-    endfor
+    "   if empty(next_msg)
+    "     let msgs_to_do += [prev_msg.id]
+    "   elseif prev_msg.desc != next_msg[0].desc || prev_msg.project != next_msg[0].project || prev_msg.due.approx != next_msg[0].due
+    "     let msgs_to_edit += [next_msg[0]]
+    "   endif
+    " endfor
 
-    for task in tasks_to_add  | let msgs += [himalaya#task#add(task)]  | endfor
-    for task in tasks_to_edit | let msgs += [himalaya#task#edit(task)] | endfor
-    for id in tasks_to_do     | let msgs += [himalaya#task#do(id)]     | endfor 
+    " for msg in msgs_to_add  | let msgs += [himalaya#msg#add(msg)]  | endfor
+    " for msg in msgs_to_edit | let msgs += [himalaya#msg#edit(msg)] | endfor
+    " for id in msgs_to_do     | let msgs += [himalaya#msg#do(id)]     | endfor 
 
-    call himalaya#ui#list()
-    let &modified = 0
-    for msg in msgs | call s:print_msg(msg) | endfor
+    " call himalaya#ui#list()
+    " let &modified = 0
+    " for msg in msgs | call s:print_msg(msg) | endfor
   " catch
   "   call s:print_err(v:exception)
   " endtry
@@ -338,22 +195,22 @@ endfunction
 
 " -------------------------------------------------------------------- # Utils #
 
-function! s:get_max_widths(tasks, columns)
+function! s:get_max_widths(msgs, columns)
   let max_widths = map(copy(a:columns), 'strlen(s:config.labels[v:val])')
 
-  for task in a:tasks
-    let widths = map(copy(a:columns), 'strlen(task[v:val])')
+  for msg in a:msgs
+    let widths = map(copy(a:columns), 'strlen(msg[v:val])')
     call map(max_widths, 'max([widths[v:key], v:val])')
   endfor
 
   return max_widths
 endfunction
 
-function! s:get_focused_task_id()
+function! s:get_focused_msg_id()
   try
     return s:trim(split(getline("."), "|")[0])
   catch
-    throw "task not found"
+    throw "msg not found"
   endtry
 endfunction
 

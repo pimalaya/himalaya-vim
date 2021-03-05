@@ -8,4 +8,4 @@ if !executable("himalaya")
   throw "himalaya not found, see https://github.com/soywod/himalaya#installation"
 endif
 
-command! Himalaya call himalaya#ui#list()
+command! Himalaya call himalaya#msg#list()

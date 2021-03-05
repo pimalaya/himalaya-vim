@@ -1,3 +1,4 @@
+let s:trim = function("himalaya#utils#trim")
 let s:print_err = function("himalaya#utils#print_err")
 let s:print_info = function("himalaya#utils#print_msg")
 
@@ -68,6 +69,14 @@ function! himalaya#mbx#format_for_list(mbx)
   return mbx
 endfunction
 
+function! s:get_focused_mbx()
+  try
+    return s:trim(split(getline("."), "|")[1])
+  catch
+    throw "mailbox not found"
+  endtry
+endfunction
+
 function! himalaya#mbx#list()
   try
     call s:print_info("Fetching mailboxes…")
@@ -89,4 +98,9 @@ function! himalaya#mbx#list()
   catch
     call s:print_err(v:exception)
   endtry
+endfunction
+
+function! himalaya#mbx#select()
+  let mbx = s:get_focused_mbx()
+  call himalaya#msg#list(mbx)
 endfunction

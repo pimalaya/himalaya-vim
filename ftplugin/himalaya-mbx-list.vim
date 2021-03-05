@@ -10,16 +10,10 @@ nnoremap <buffer> <silent> <cr>  :bwipeout<cr>
 nnoremap <buffer> <silent> <esc> :bwipeout<cr>
 
 let mappings = [
-  \["n", "<cr>",    "show"          ],
-  \["n", "<c-n>",   "next-cell"     ],
-  \["n", "<c-p>",   "prev-cell"     ],
-  \["n", "vic",     "visual-in-cell"],
+  \["n", "<cr>", "mbx-select"],
 \]
 
-nnoremap <silent> <plug>(himalaya-show)           :call himalaya#ui#show()             <cr>
-nnoremap <silent> <plug>(himalaya-next-cell)      :call himalaya#ui#select_next_cell() <cr>
-nnoremap <silent> <plug>(himalaya-prev-cell)      :call himalaya#ui#select_prev_cell() <cr>
-nnoremap <silent> <plug>(himalaya-visual-in-cell) :call himalaya#ui#visual_in_cell()   <cr>
+nnoremap <silent> <plug>(himalaya-mbx-select) :call himalaya#mbx#select() <cr>
 
 for [mode, key, plug] in mappings
   let plug = printf("<plug>(himalaya-%s)", plug)

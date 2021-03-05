@@ -63,19 +63,15 @@ let s:config = {
   \},
 \}
 
-function! himalaya#msg#list()
+function! himalaya#msg#list(mbx)
   try
-    call s:print_info("Fetching emails…")
+    call s:print_info(printf('Fetching %s messages…', a:mbx))
 
     let prev_pos = getpos(".")
-    let msgs = s:exec("himalaya --output json list", [])
+    let msgs = s:exec(printf('himalaya --output json  list --mailbox "%s"', a:mbx), [])
 
-    redir => buf_list | silent! ls | redir END
-    execute "silent! edit " . s:buff_name
-
-    if match(buf_list, '"Himalaya') > -1
-      execute "0,$d"
-    endif
+    silent! bwipeout "Messages"
+    silent! edit Messages
 
     call append(0, s:render("list", msgs))
     execute "$d"

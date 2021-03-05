@@ -1,4 +1,4 @@
-# 📫 Himalaya.vim
+# 📫 Himalaya.vim [WIP]
 
 Vim plugin for [Himalaya](https://github.com/soywod/himalaya) CLI email client.
 

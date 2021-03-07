@@ -94,7 +94,8 @@ function! himalaya#mbx#list()
     call setpos(".", prev_pos)
     setlocal filetype=himalaya-mbx-list
     let &modified = 0
-    echo
+
+    call s:print_info("Done!")
   catch
     call s:print_err(v:exception)
   endtry

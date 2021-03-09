@@ -1,158 +1,133 @@
 let s:print_info = function("himalaya#utils#print_msg")
 let s:print_err = function("himalaya#utils#print_err")
 let s:trim = function("himalaya#utils#trim")
-let s:exec = function("himalaya#shared#exec")
+let s:cli = function("himalaya#shared#cli")
 
-let s:curr_msg_id = 0
+let s:msg_id = 0
 let s:draft = ""
 
-" Current mailbox
-
-let s:mbox = "INBOX"
-
-function! himalaya#msg#set_mbox(mbox)
-  let s:mbox = a:mbox
-endfunction
-
-" Current page
-
-let s:page = 0
-
-function! himalaya#msg#set_page(page)
-  let s:page = a:page
-endfunction
-
-" Functions
+" Message
 
 function! himalaya#msg#list()
   try
-    call s:print_info(printf("Fetching %s page %d…", s:mbox, s:page + 1))
+    let mbox = himalaya#mbox#curr_mbox()
+    let page = himalaya#mbox#curr_page()
 
-    let prev_pos = getpos(".")
-    let msgs = s:exec("himalaya --output json list --mailbox %s --page %d", [shellescape(s:mbox), s:page])
-    let bufname = printf("Himalaya messages [%s] [page %d]", s:mbox, s:page + 1)
-    execute printf("silent! %s %s", stridx(bufname("%"), "Himalaya") == 0 ? "file" : "edit", bufname)
+    call s:print_info(printf("Fetching %s messages…", tolower(mbox)))
+    let msgs = s:cli("list --mailbox %s --page %d", [shellescape(mbox), page])
+    call s:print_info("Done!")
 
+    let buftype = stridx(bufname("%"), "Himalaya messages") == 0 ? "file" : "edit"
+    execute printf("silent! %s Himalaya messages [%s] [page %d]", buftype, tolower(mbox), page + 1)
     setlocal modifiable
     execute "%d"
     call append(0, s:render("list", msgs))
     execute "$d"
-    setlocal nomodifiable
-
-    call setpos(".", prev_pos)
     setlocal filetype=himalaya-msg-list
     let &modified = 0
-
-    call s:print_info("Done!")
+    execute 0
   catch
     call s:print_err(v:exception)
   endtry
 endfunction
 
-function! himalaya#msg#prev()
-  let s:page = max([0, s:page - 1])
-  call himalaya#msg#list()
-endfunction
-
-function! himalaya#msg#next()
-  let s:page = s:page + 1
-  call himalaya#msg#list()
-endfunction
-
 function! himalaya#msg#read()
-    let s:curr_msg_id = s:get_focused_msg()
-    call s:print_info(printf("Fetching message %d…", s:curr_msg_id))
+  try
+    let s:msg_id = s:get_focused_msg_id()
+    let mbox = himalaya#mbox#curr_mbox()
 
-    let prev_pos = getpos(".")
-    let msg = s:exec(printf("himalaya --output json read %d", s:curr_msg_id), [])
+    call s:print_info(printf("Fetching message %d…", s:msg_id))
+    let msg = s:cli("read %d --mailbox %s", [s:msg_id, shellescape(mbox)])
+    call s:print_info("Done!")
 
-    silent! bwipeout "Message"
-    silent! edit Message
-
+    execute printf("silent! edit Himalaya read message [%d]", s:msg_id)
+    setlocal modifiable
+    execute "%d"
     call append(0, split(substitute(msg.content, "\r", "", "g"), "\n"))
     execute "$d"
-
-    call setpos(".", prev_pos)
     setlocal filetype=himalaya-msg-read
     let &modified = 0
-
-    call s:print_info("Done!")
+    execute 0
+  catch
+    call s:print_err(v:exception)
+  endtry
 endfunction
 
 function! himalaya#msg#write()
-    call s:print_info("Fetching template…")
+  try
+    call s:print_info("Fetching new template…")
+    let msg = s:cli("template new", [])
+    call s:print_info("Done!")
 
-    let prev_pos = getpos(".")
-    let msg = s:exec("himalaya --output json template new", [])
-
-    silent! bwipeout "Write"
-    silent! edit Write
-
+    silent! edit Himalaya write
     call append(0, split(substitute(msg.template, "\r", "", "g"), "\n"))
     execute "$d"
-
-    call setpos(".", prev_pos)
     setlocal filetype=himalaya-msg-write
     let &modified = 0
-
-    call s:print_info("Done!")
+    execute 0
+  catch
+    call s:print_err(v:exception)
+  endtry
 endfunction
 
 function! himalaya#msg#reply()
-    call s:print_info("Fetching template…")
+  try
+    let mbox = himalaya#mbox#curr_mbox()
+    let msg_id = stridx(bufname("%"), "Himalaya messages") == 0 ? s:get_focused_msg_id() : s:msg_id
 
-    let prev_pos = getpos(".")
-    let msg = s:exec(printf("himalaya --output json template reply %d", s:curr_msg_id), [])
+    call s:print_info("Fetching reply template…")
+    let msg = s:cli("template reply %d --mailbox %s", [msg_id, shellescape(mbox)])
+    call s:print_info("Done!")
 
-    silent! bwipeout "Reply"
-    silent! edit Reply
-
+    execute printf("silent! edit Himalaya reply [%d]", msg_id)
     call append(0, split(substitute(msg.template, "\r", "", "g"), "\n"))
     execute "$d"
-
-    call setpos(".", prev_pos)
     setlocal filetype=himalaya-msg-write
     let &modified = 0
-
-    call s:print_info("Done!")
+    execute 0
+  catch
+    call s:print_err(v:exception)
+  endtry
 endfunction
 
 function! himalaya#msg#reply_all()
-    call s:print_info("Fetching template…")
+  try
+    let mbox = himalaya#mbox#curr_mbox()
+    let msg_id = stridx(bufname("%"), "Himalaya messages") == 0 ? s:get_focused_msg_id() : s:msg_id
 
-    let prev_pos = getpos(".")
-    let msg = s:exec(printf("himalaya --output json template reply %d --all", s:curr_msg_id), [])
+    call s:print_info("Fetching reply all template…")
+    let msg = s:cli("template reply %d --mailbox %s --all", [msg_id, shellescape(mbox)])
+    call s:print_info("Done!")
 
-    silent! bwipeout "Reply all"
-    silent! edit "Reply all"
-
+    execute printf("silent! edit Himalaya reply all [%d]", msg_id)
     call append(0, split(substitute(msg.template, "\r", "", "g"), "\n"))
     execute "$d"
-
-    call setpos(".", prev_pos)
     setlocal filetype=himalaya-msg-write
     let &modified = 0
-
-    call s:print_info("Done!")
+    execute 0
+  catch
+    call s:print_err(v:exception)
+  endtry
 endfunction
 
 function! himalaya#msg#forward()
-    call s:print_info("Fetching template…")
+  try
+    let mbox = himalaya#mbox#curr_mbox()
+    let msg_id = stridx(bufname("%"), "Himalaya messages") == 0 ? s:get_focused_msg_id() : s:msg_id
 
-    let prev_pos = getpos(".")
-    let msg = s:exec(printf("himalaya --output json template forward %d", s:curr_msg_id), [])
+    call s:print_info("Fetching forward template…")
+    let msg = s:cli("template forward %d --mailbox %s", [msg_id, shellescape(mbox)])
+    call s:print_info("Done!")
 
-    silent! bwipeout "Forward"
-    silent! edit Forward
-
+    execute printf("silent! edit Himalaya forward [%d]", msg_id)
     call append(0, split(substitute(msg.template, "\r", "", "g"), "\n"))
     execute "$d"
-
-    call setpos(".", prev_pos)
     setlocal filetype=himalaya-msg-write
     let &modified = 0
-
-    call s:print_info("Done!")
+    execute 0
+  catch
+    call s:print_err(v:exception)
+  endtry
 endfunction
 
 function! himalaya#msg#draft_save()
@@ -169,12 +144,12 @@ function! himalaya#msg#draft_handle()
 
     if choice == "s"
       call s:print_info("Sending message…")
-      call s:exec(printf("himalaya --output json send -- %s", shellescape(s:draft)), [])
+      call s:cli("send -- %s", [shellescape(s:draft)])
       call s:print_info("Done!")
       return
     elseif choice == "d"
       call s:print_info("Saving draft…")
-      call s:exec(printf("himalaya --output json save --mailbox Drafts -- %s", shellescape(s:draft)), [])
+      call s:cli("save --mailbox Drafts -- %s", [shellescape(s:draft)])
       call s:print_info("Done!")
       return
     elseif choice == "q"
@@ -230,7 +205,7 @@ function! s:get_max_widths(msgs, columns)
   return max_widths
 endfunction
 
-function! s:get_focused_msg()
+function! s:get_focused_msg_id()
   try
     return s:trim(split(getline("."), "|")[0])
   catch

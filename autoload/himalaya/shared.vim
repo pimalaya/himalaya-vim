@@ -11,3 +11,16 @@ function! himalaya#shared#define_bindings(bindings)
     endif
   endfor
 endfunction
+
+function! himalaya#shared#exec(cmd, args)
+  let cmd = call("printf", [a:cmd] + a:args)
+  let res = system(cmd)
+
+  if !empty(res)
+    try
+      return eval(res)
+    catch
+      throw res
+    endtry
+  endif
+endfunction

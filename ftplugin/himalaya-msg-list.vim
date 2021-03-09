@@ -10,7 +10,9 @@ nnoremap <buffer><silent><cr>  :bwipeout<cr>
 nnoremap <buffer><silent><esc> :bwipeout<cr>
 
 call himalaya#shared#define_bindings([
-  \["n", "gm"  , "mbx-list" ],
-  \["n", "<cr>", "msg-read" ],
-  \["n", "gn"  , "msg-write"],
+  \["n", "gm"  , "mbox-input"],
+  \["n", "<cr>", "msg-read"  ],
+  \["n", "gw"  , "msg-write" ],
+  \["n", "gp"  , "msg-prev"  ],
+  \["n", "gn"  , "msg-next"  ],
 \])

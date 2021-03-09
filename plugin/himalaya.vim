@@ -5,7 +5,7 @@ endif
 let g:himalaya_loaded = 1
 
 if !executable("himalaya")
-  throw "himalaya not found, see https://github.com/soywod/himalaya#installation"
+  throw "Himalaya CLI not found, see https://github.com/soywod/himalaya#installation"
 endif
 
-command! Himalaya call himalaya#msg#list("INBOX")
+command! Himalaya call himalaya#msg#list()

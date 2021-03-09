@@ -10,16 +10,8 @@ setlocal foldmethod=expr
 setlocal nowrap
 setlocal startofline
 
-let mappings = [
-  \["n", "gs", "msg-send"],
-\]
-
-nnoremap <silent><plug>(himalaya-msg-send) :call himalaya#msg#send()<cr>
-
-for [mode, key, plug] in mappings
-  let plug = printf("<plug>(himalaya-%s)", plug)
-
-  if !hasmapto(plug, mode)
-    execute printf("%smap <nowait><buffer> %s %s", mode, key, plug)
-  endif
-endfor
+augroup himalaya
+  autocmd! * <buffer>
+  autocmd  BufWriteCmd  <buffer> call himalaya#msg#draft_save()
+  autocmd  BufUnload    <buffer> call himalaya#msg#draft_handle()
+augroup end

@@ -4,6 +4,7 @@ let s:trim = function("himalaya#utils#trim")
 
 let s:buff_name = "Himalaya"
 let s:curr_msg_id = 0
+let s:draft = ""
 
 " Exec utils
 
@@ -11,11 +12,13 @@ function! s:exec(cmd, args)
   let cmd = call("printf", [a:cmd] + a:args)
   let res = system(cmd)
 
-  try
-    return eval(res)
-  catch
-    throw res
-  endtry
+  if !empty(res)
+    try
+      return eval(res)
+    catch
+      throw res
+    endtry
+  endif
 endfunction
 
 " Render utils
@@ -116,14 +119,14 @@ function! himalaya#msg#read()
     call s:print_info("Done!")
 endfunction
 
-function! himalaya#msg#new()
+function! himalaya#msg#write()
     call s:print_info("Fetching template…")
 
     let prev_pos = getpos(".")
     let msg = s:exec("himalaya --output json template new", [])
 
-    silent! bwipeout "New"
-    silent! edit New
+    silent! bwipeout "Write"
+    silent! edit Write
 
     call append(0, split(substitute(msg.template, "\r", "", "g"), "\n"))
     execute "$d"
@@ -190,4 +193,34 @@ function! himalaya#msg#forward()
     let &modified = 0
 
     call s:print_info("Done!")
+endfunction
+
+function! himalaya#msg#draft_save()
+  let s:draft = join(getline(1, "$"), "\r\n")
+  call s:print_info("Draft saved!")
+  let &modified = 0
+endfunction
+
+function! himalaya#msg#draft_handle()
+  while 1
+    let choice = input("(s)end, (d)raft, (q)uit or (c)ancel? ")
+    let choice = tolower(choice)[0]
+    redraw | echo
+
+    if choice == "s"
+      call s:print_info("Sending message…")
+      call s:exec(printf("himalaya --output json send -- %s", shellescape(s:draft)), [])
+      call s:print_info("Done!")
+      return
+    elseif choice == "d"
+      call s:print_info("Saving draft…")
+      call s:exec(printf("himalaya --output json save --mailbox Drafts -- %s", shellescape(s:draft)), [])
+      call s:print_info("Done!")
+      return
+    elseif choice == "q"
+      return
+    elseif choice == "c"
+      throw "Action canceled"
+    endif
+  endwhile
 endfunction

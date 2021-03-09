@@ -1,4 +1,3 @@
-setlocal bufhidden=wipe
 setlocal buftype=nofile
 setlocal cursorline
 setlocal nomodifiable
@@ -10,9 +9,12 @@ nnoremap <buffer><silent><cr>  :bwipeout<cr>
 nnoremap <buffer><silent><esc> :bwipeout<cr>
 
 call himalaya#shared#define_bindings([
-  \["n", "gm"  , "mbox-input"],
-  \["n", "<cr>", "msg-read"  ],
-  \["n", "gw"  , "msg-write" ],
-  \["n", "gp"  , "msg-prev"  ],
-  \["n", "gn"  , "msg-next"  ],
+  \["n", "gm"  , "mbox#input"    ],
+  \["n", "gp"  , "mbox#prev_page"],
+  \["n", "gn"  , "mbox#next_page"],
+  \["n", "<cr>", "msg#read"      ],
+  \["n", "gw"  , "msg#write"     ],
+  \["n", "gr"  , "msg#reply"     ],
+  \["n", "gR"  , "msg#reply_all" ],
+  \["n", "gf"  , "msg#forward"   ],
 \])

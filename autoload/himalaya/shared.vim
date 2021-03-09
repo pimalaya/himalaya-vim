@@ -1,10 +1,8 @@
 function! himalaya#shared#define_bindings(bindings)
   for [mode, key, name] in a:bindings
-    let name = printf("himalaya-%s", name)
-    let plug = printf("<plug>(%s)", name)
-
-    let fn = substitute(name, "-", "#", "g")
-    execute printf("%snoremap <silent>%s :call %s()<cr>", mode, plug, fn)
+    let plug = substitute(name, "[#_]", "-", "g")
+    let plug = printf("<plug>(himalaya-%s)", plug)
+    execute printf("%snoremap <silent>%s :call himalaya#%s()<cr>", mode, plug, name)
 
     if !hasmapto(plug, mode)
       execute printf("%smap <nowait><buffer>%s %s", mode, key, plug)
@@ -12,8 +10,8 @@ function! himalaya#shared#define_bindings(bindings)
   endfor
 endfunction
 
-function! himalaya#shared#exec(cmd, args)
-  let cmd = call("printf", [a:cmd] + a:args)
+function! himalaya#shared#cli(cmd, args)
+  let cmd = call("printf", ["himalaya --output json " . a:cmd] + a:args)
   let res = system(cmd)
 
   if !empty(res)
@@ -23,4 +21,8 @@ function! himalaya#shared#exec(cmd, args)
       throw res
     endtry
   endif
+endfunction
+
+function! himalaya#shared#thread_fold(lnum)
+  return getline(a:lnum)[0] == ">"
 endfunction

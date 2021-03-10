@@ -40,7 +40,8 @@ function! himalaya#msg#read()
     let msg = s:cli("read %d --mailbox %s", [s:msg_id, shellescape(mbox)])
     call s:print_info("Done!")
 
-    execute printf("silent! edit Himalaya read message [%d]", s:msg_id)
+    let attachment = msg.hasAttachment ? " []" : ""
+    execute printf("silent! edit Himalaya read message [%d]%s", s:msg_id, attachment)
     setlocal modifiable
     execute "%d"
     call append(0, split(substitute(msg.content, "\r", "", "g"), "\n"))
@@ -158,6 +159,19 @@ function! himalaya#msg#draft_handle()
       throw "Action canceled"
     endif
   endwhile
+endfunction
+
+function! himalaya#msg#attachments()
+  try
+    let mbox = himalaya#mbox#curr_mbox()
+    let msg_id = stridx(bufname("%"), "Himalaya messages") == 0 ? s:get_focused_msg_id() : s:msg_id
+
+    call s:print_info("Downloading attachments…")
+    let msg = s:cli("attachments %d --mailbox %s", [msg_id, shellescape(mbox)])
+    call s:print_info("Done!")
+  catch
+    call s:print_err(v:exception)
+  endtry
 endfunction
 
 " Render utils

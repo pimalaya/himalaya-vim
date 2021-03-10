@@ -10,8 +10,9 @@ setlocal nowrap
 setlocal startofline
 
 call himalaya#shared#define_bindings([
-  \["n", "gw", "msg#write"    ],
-  \["n", "gr", "msg#reply"    ],
-  \["n", "gR", "msg#reply_all"],
-  \["n", "gf", "msg#forward"  ],
+  \["n", "gw", "msg#write"      ],
+  \["n", "gr", "msg#reply"      ],
+  \["n", "gR", "msg#reply_all"  ],
+  \["n", "gf", "msg#forward"    ],
+  \["n", "ga", "msg#attachments"],
 \])

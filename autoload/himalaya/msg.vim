@@ -8,6 +8,17 @@ let s:draft = ""
 
 " Message
 
+function! s:format_msg_for_list(msg)
+  let msg = copy(a:msg)
+
+  let flag_unseen = index(msg.flags, "seen") == -1 ? "✶" : " "
+  let flag_replied = index(msg.flags, "answered") == -1 ? " " : "↩"
+  let flag_flagged = index(msg.flags, "flagged") == -1 ? " " : "!"
+  let msg.flags = printf("%s%s%s", flag_unseen, flag_replied, flag_flagged)
+
+  return msg
+endfunction
+
 function! himalaya#msg#list()
   try
     let mbox = himalaya#mbox#curr_mbox()
@@ -15,6 +26,7 @@ function! himalaya#msg#list()
 
     call s:print_info(printf("Fetching %s messages…", tolower(mbox)))
     let msgs = s:cli("list --mailbox %s --page %d", [shellescape(mbox), page])
+    let msgs = map(copy(msgs), "s:format_msg_for_list(v:val)")
     call s:print_info("Done!")
 
     let buftype = stridx(bufname("%"), "Himalaya messages") == 0 ? "file" : "edit"
@@ -178,10 +190,11 @@ endfunction
 
 let s:config = {
   \"list": {
-    \"columns": ["uid", "subject", "sender", "date"],
+    \"columns": ["uid", "flags", "subject", "sender", "date"],
   \},
   \"labels": {
     \"uid": "UID",
+    \"flags": "FLAGS",
     \"subject": "SUBJECT",
     \"sender": "SENDER",
     \"date": "DATE",

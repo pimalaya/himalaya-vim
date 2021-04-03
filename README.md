@@ -1,3 +1,5 @@
+*⚠️  Plugin merged into the main CLI repository [https://github.com/soywod/himalaya](https://github.com/soywod/himalaya/tree/master/vim).*
+
 # 📫 Himalaya.vim
 
 Vim plugin for [Himalaya](https://github.com/soywod/himalaya) CLI email client.

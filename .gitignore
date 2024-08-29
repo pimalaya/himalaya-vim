@@ -1,1 +1,9 @@
-/doc/tags
+# Direnv
+.envrc
+.direnv/
+
+# Nix build directory
+result
+
+# Vim doc tags
+doc/tags

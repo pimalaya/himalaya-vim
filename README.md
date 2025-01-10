@@ -86,6 +86,15 @@ The command must print each possible result on its own line. Each line must cont
 let g:himalaya_complete_contact_cmd = '<your completion command>'
 ```
 
+### `g:himalaya_custom_email_flags`
+Defines the list of additional custom flags that himalaya-vim should be aware
+of. They should be specified as a list of strings:
+
+```vim
+let g:himalaya_custom_email_flags = ['custom1', 'custom2']
+```
+
+
 ## Usage
 
 ### Folder listing
@@ -143,8 +152,8 @@ nmap ga   <plug>(himalaya-email-download-attachments)
 nmap gC   <plug>(himalaya-email-copy)
 nmap gM   <plug>(himalaya-email-move)
 nmap gD   <plug>(himalaya-email-delete)
-nmap gFa  <plug>(himalaya-email-flag-add)
-nmap gFr  <plug>(himalaya-email-flag-remove)
+nmap gFa  <plug>(himalaya-email-flags-add)
+nmap gFr  <plug>(himalaya-email-flags-remove)
 nmap g/   <plug>(himalaya-set-list-envelopes-query)
 ```
 

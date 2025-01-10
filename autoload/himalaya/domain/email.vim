@@ -277,23 +277,13 @@ endfunction
 
 function! himalaya#domain#email#flags_add() abort range
   let ids = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursors(a:firstline, a:lastline) : s:id
-  let flags = input(printf("Select flags to add between (Seen, Answered, Flagged, Deleted, Drafts)\n
-                            \Example -> \"Flags to add: Seen Deleted\". NOTE space separated\n
-                            \Flags to add: "))
+  let flags = input(printf("Flags to add (space separated): "), "", "custom,himalaya#domain#email#flags#complete")
   redraw | echo
   
   let flagsarr = split(flags)
   if len(flagsarr) == 0
     return
   endif
-  for flag in flagsarr
-    if index(["Seen", "Answered", "Flagged", "Deleted", "Drafts"], flag) == -1
-      echohl WarningMsg
-      echo "Flag " . flag . " does not exist, operation aborted"
-      echohl None
-      return
-    endif
-  endfor
 
   let account = himalaya#domain#account#current()
   let folder = himalaya#domain#folder#current()
@@ -308,23 +298,13 @@ endfunction
 
 function! himalaya#domain#email#flags_remove() abort range
   let ids = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursors(a:firstline, a:lastline) : s:id
-  let flags = input(printf("Select flags to remove between (Seen, Answered, Flagged, Deleted, Drafts)\n
-                            \Example -> \"Flags to remove: Seen Deleted\". NOTE space separated\n
-                            \Flags to remove: "))
+  let flags = input(printf("Flags to remove (space separated): "), "", "custom,himalaya#domain#email#flags#complete")
   redraw | echo
 
   let flagsarr = split(flags)
   if len(flagsarr) == 0
     return
   endif
-  for flag in flagsarr
-    if index(["Seen", "Answered", "Flagged", "Deleted", "Drafts"], flag) == -1
-      echohl WarningMsg
-      echo "Flag " . flag . " does not exist, operation aborted"
-      echohl None
-      return
-    endif
-  endfor
 
   let account = himalaya#domain#account#current()
   let folder = himalaya#domain#folder#current()

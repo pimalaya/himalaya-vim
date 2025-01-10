@@ -17,5 +17,9 @@ call himalaya#keybinds#define([
   \['n', 'gM'  , 'email#select_folder_then_move' ],
   \['n', 'gD'  , 'email#delete'                  ],
   \['v', 'gD'  , 'email#delete'                  ],
+  \['n', 'gFa' , 'email#flags_add'               ],
+  \['v', 'gFa' , 'email#flags_add'               ],
+  \['n', 'gFr' , 'email#flags_remove'            ],
+  \['v', 'gFr' , 'email#flags_remove'            ],
   \['n', 'g/'  , 'email#set_list_envelopes_query'],
 \])

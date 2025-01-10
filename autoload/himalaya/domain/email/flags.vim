@@ -6,7 +6,10 @@ function! himalaya#domain#email#flags#complete(ArgLead, CmdLine, CursorPos) abor
 
     let prev_space = strridx(a:ArgLead[:a:CursorPos], ' ')
     let prefix = a:ArgLead[:prev_space]
-    let prefixed = map(all_flags, 'prev_space > 0? prefix . v:val : v:val')
+    let inserted_flags = split(prefix)
+    let filtered_flags = filter(all_flags, 'index(inserted_flags, v:val) < 0')
+    let prefixed = map(filtered_flags, 'prev_space > 0? prefix . v:val : v:val')
     
     return join(prefixed, "\n")
 endfunction
+

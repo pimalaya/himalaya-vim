@@ -281,8 +281,12 @@ function! himalaya#domain#email#flags_add() abort range
                             \Example -> \"Flags to add: Seen Deleted\". NOTE space separated\n
                             \Flags to add: "))
   redraw | echo
-
-  for flag in split(flags)
+  
+  let flagsarr = split(flags)
+  if len(flagsarr) == 0
+    return
+  endif
+  for flag in flagsarr
     if index(["Seen", "Answered", "Flagged", "Deleted", "Drafts"], flag) == -1
       echohl WarningMsg
       echo "Flag " . flag . " does not exist, operation aborted"
@@ -309,7 +313,11 @@ function! himalaya#domain#email#flags_remove() abort range
                             \Flags to remove: "))
   redraw | echo
 
-  for flag in split(flags)
+  let flagsarr = split(flags)
+  if len(flagsarr) == 0
+    return
+  endif
+  for flag in flagsarr
     if index(["Seen", "Answered", "Flagged", "Deleted", "Drafts"], flag) == -1
       echohl WarningMsg
       echo "Flag " . flag . " does not exist, operation aborted"

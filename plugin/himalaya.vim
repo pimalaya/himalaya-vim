@@ -26,8 +26,8 @@ command! -nargs=1 HimalayaFolder       call himalaya#domain#folder#handle_select
 command! -nargs=* HimalayaNextPage     call himalaya#domain#folder#select_next_page()
 command! -nargs=* HimalayaPreviousPage call himalaya#domain#folder#select_previous_page()
 command! -nargs=* HimalayaAttachments  call himalaya#domain#email#download_attachments()
-command! -nargs=* HimalayaFlagsAdd     call himalaya#domain#email#flags_add()
-command! -nargs=* HimalayaFlagsRemove  call himalaya#domain#email#flags_remove()
+command! -nargs=* HimalayaFlagAdd      call himalaya#domain#email#flag_add()
+command! -nargs=* HimalayaFlagRemove   call himalaya#domain#email#flag_remove()
 
 " Restore cpo
 let &cpo = s:cpo_backup

@@ -133,8 +133,8 @@ With the [fzf.vim](https://github.com/junegunn/fzf.vim) picker:
 | Copy the email under cursor                            | `gC`      |
 | Move the email under cursor                            | `gM`      |
 | Delete email(s) under cursor or visual selection       | `gD`      |
-| Add the specified flags to the selected email(s)       | `gFa`     |
-| Remove the specified flags from the selected email(s)  | `gFr`     |
+| Add the specified flag to the selected email(s)        | `gFa`     |
+| Remove the specified flag from the selected email(s)   | `gFr`     |
 | Filter and sort envelopes according to the given query | `g/`      |
 
 Keybinds can be customized:
@@ -152,8 +152,8 @@ nmap ga   <plug>(himalaya-email-download-attachments)
 nmap gC   <plug>(himalaya-email-copy)
 nmap gM   <plug>(himalaya-email-move)
 nmap gD   <plug>(himalaya-email-delete)
-nmap gFa  <plug>(himalaya-email-flags-add)
-nmap gFr  <plug>(himalaya-email-flags-remove)
+nmap gFa  <plug>(himalaya-email-flag-add)
+nmap gFr  <plug>(himalaya-email-flag-remove)
 nmap g/   <plug>(himalaya-set-list-envelopes-query)
 ```
 

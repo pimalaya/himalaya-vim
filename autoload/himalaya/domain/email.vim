@@ -275,9 +275,9 @@ function! himalaya#domain#email#delete() abort range
   \})
 endfunction
 
-function! himalaya#domain#email#flags_add() abort range
+function! himalaya#domain#email#flag_add() abort range
   let ids = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursors(a:firstline, a:lastline) : s:id
-  let flags = input(printf("Flags to add (space separated): "), "", "custom,himalaya#domain#email#flags#complete")
+  let flags = input(printf("Flag to add: "), "", "custom,himalaya#domain#email#flags#complete")
   redraw | echo
   
   let flagsarr = split(flags)
@@ -296,9 +296,9 @@ function! himalaya#domain#email#flags_add() abort range
   \})
 endfunction
 
-function! himalaya#domain#email#flags_remove() abort range
+function! himalaya#domain#email#flag_remove() abort range
   let ids = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursors(a:firstline, a:lastline) : s:id
-  let flags = input(printf("Flags to remove (space separated): "), "", "custom,himalaya#domain#email#flags#complete")
+  let flags = input(printf("Flag to remove: "), "", "custom,himalaya#domain#email#flags#complete")
   redraw | echo
 
   let flagsarr = split(flags)

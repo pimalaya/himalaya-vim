@@ -9,7 +9,7 @@ function! himalaya#domain#account#open_picker(on_select_account) abort
   \ 'cmd': 'account list',
   \ 'args': [],
   \ 'msg': 'Listing accounts',
-  \ 'on_data': {data -> s:open_picker(data, a:on_select_account)},
+  \ 'on_data': {data -> s:open_picker(data.accounts, a:on_select_account)},
   \})
 endfunction
 
@@ -37,5 +37,5 @@ endfunction
 
 function! himalaya#domain#account#set(account) abort
   let s:account = a:account
-  call himalaya#domain#folder#set('INBOX')
+  call himalaya#domain#mailbox#set('INBOX')
 endfunction

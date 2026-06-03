@@ -25,8 +25,8 @@
             packadd! himalaya
 
             " native, fzf or telescope
-            let g:himalaya_folder_picker = 'telescope'
-            let g:himalaya_folder_picker_telescope_preview = v:false
+            let g:himalaya_mailbox_picker = 'telescope'
+            let g:himalaya_mailbox_picker_telescope_preview = v:false
             let g:himalaya_complete_contact_cmd = 'echo test@localhost'
           '';
         in

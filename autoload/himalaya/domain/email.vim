@@ -12,24 +12,24 @@ function! himalaya#domain#email#list(...) abort
     call himalaya#domain#account#select(a:1)
   endif
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
-  let page = himalaya#domain#folder#current_page()
-  call himalaya#domain#email#list_with(account, folder, page, s:query)
+  let mailbox = himalaya#domain#mailbox#current()
+  let page = himalaya#domain#mailbox#current_page()
+  call himalaya#domain#email#list_with(account, mailbox, page, s:query)
 endfunction
 
-function! himalaya#domain#email#list_with(account, folder, page, query) abort
+function! himalaya#domain#email#list_with(account, mailbox, page, query) abort
   call himalaya#request#plain({
-  \ 'cmd': 'envelope list --folder %s --account %s --max-width %d --page-size %d --page %d %s',
-  \ 'args': [shellescape(a:folder), shellescape(a:account), s:bufwidth(), winheight(0) - 1, a:page, a:query],
-  \ 'msg': printf('Fetching %s envelopes', a:folder),
-  \ 'on_data': {data -> s:list_with(a:folder, a:page, data)}
+  \ 'cmd': 'envelope list --mailbox %s --account %s --max-width %d --page-size %d --page %d %s',
+  \ 'args': [shellescape(a:mailbox), shellescape(a:account), s:bufwidth(), winheight(0) - 1, a:page, a:query],
+  \ 'msg': printf('Fetching %s envelopes', a:mailbox),
+  \ 'on_data': {data -> s:list_with(a:mailbox, a:page, data)}
   \})
 endfunction
 
-function! s:list_with(folder, page, emails) abort
+function! s:list_with(mailbox, page, emails) abort
   let buftype = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? 'file' : 'edit'
   let query = empty(s:query) ? 'all' : s:query
-  execute printf('silent! %s Himalaya envelopes [%s] [%s] [page %d]', buftype, a:folder, query, a:page)
+  execute printf('silent! %s Himalaya envelopes [%s] [%s] [page %d]', buftype, a:mailbox, query, a:page)
   setlocal modifiable
   silent execute '%d'
   call append(0, split(a:emails, "\n"))
@@ -45,10 +45,10 @@ function! himalaya#domain#email#read() abort
     return
   endif
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
   call himalaya#request#plain({
-  \ 'cmd': 'message read --account %s --folder %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), s:id],
+  \ 'cmd': 'message read --account %s --mailbox %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), s:id],
   \ 'msg': printf('Fetching email %s', s:id),
   \ 'on_data': {data -> s:read(s:id, data)},
   \})
@@ -68,11 +68,11 @@ endfunction
 
 function! himalaya#domain#email#download_attachments() abort
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
   let id = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursor() : s:id
   call himalaya#request#plain({
-  \ 'cmd': 'attachment download --account %s --folder %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), id],
+  \ 'cmd': 'attachment download --account %s --mailbox %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), id],
   \ 'msg': 'Downloading attachments',
   \ 'on_data': {data -> himalaya#log#info(data)},
   \})
@@ -84,7 +84,7 @@ function! himalaya#domain#email#write(...) abort
     call s:write('edit', a:1)
   else
     call himalaya#request#plain({
-    \ 'cmd': 'template write --account %s',
+    \ 'cmd': 'message compose --account %s',
     \ 'args': [shellescape(account)],
     \ 'msg': 'Fetching new template',
     \ 'on_data': {data -> s:write('write', data)},
@@ -94,35 +94,23 @@ endfunction
 
 function! himalaya#domain#email#reply() abort
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
   let id = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursor() : s:id
   call himalaya#request#plain({
-  \ 'cmd': 'template reply --account %s --folder %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), id],
+  \ 'cmd': 'message reply --account %s --mailbox %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), id],
   \ 'msg': 'Fetching reply template',
   \ 'on_data': {data -> s:write(printf('reply [%s]', id), data)},
   \})
 endfunction
 
-function! himalaya#domain#email#reply_all() abort
-  let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
-  let id = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursor() : s:id
-  call himalaya#request#plain({
-  \ 'cmd': 'template reply --account %s --folder %s --all %s',
-  \ 'args': [shellescape(account), shellescape(folder), id],
-  \ 'msg': 'Fetching reply all template',
-  \ 'on_data': {data -> s:write(printf('reply all [%s]', id), data)},
-  \})
-endfunction
-
 function! himalaya#domain#email#forward() abort
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
   let id = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursor() : s:id
   call himalaya#request#plain({
-  \ 'cmd': 'template forward --account %s --folder %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), id],
+  \ 'cmd': 'message forward --account %s --mailbox %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), id],
   \ 'msg': 'Fetching forward template',
   \ 'on_data': {data -> s:write(printf('forward [%s]', id), data)},
   \})
@@ -186,7 +174,7 @@ endfunction
 function! himalaya#domain#email#process_draft() abort
   try
     let account = himalaya#domain#account#current()
-    let folder = himalaya#domain#folder#current()
+    let mailbox = himalaya#domain#mailbox#current()
 
     while 1
       let choice = input('(s)end, (d)raft, (q)uit or (c)ancel? ')
@@ -198,15 +186,15 @@ function! himalaya#domain#email#process_draft() abort
 	call writefile(getline(1, '$'), draft)
 
         call himalaya#request#plain({
-        \ 'cmd': 'template send --account %s < %s',
+        \ 'cmd': 'message send --account %s < %s',
         \ 'args': [shellescape(account), shellescape(draft)],
         \ 'msg': 'Sending email',
         \ 'on_data': {-> delete(s:draft)},
         \})
 
         return himalaya#request#plain({
-        \ 'cmd': 'flag add --account %s --folder %s answered %s',
-        \ 'args': [shellescape(account), shellescape(folder), shellescape(s:id)],
+        \ 'cmd': 'flag add --account %s --mailbox %s -f answered %s',
+        \ 'args': [shellescape(account), shellescape(mailbox), shellescape(s:id)],
         \ 'msg': 'Adding answered flag',
         \ 'on_data': {-> delete(draft)},
         \})
@@ -214,7 +202,7 @@ function! himalaya#domain#email#process_draft() abort
         let draft = tempname()
 	call writefile(getline(1, '$'), draft)
         return himalaya#request#plain({
-        \ 'cmd': 'template save --account %s --folder drafts < %s',
+        \ 'cmd': 'message add --account %s --mailbox drafts -f draft < %s',
         \ 'args': [shellescape(account), shellescape(draft)],
         \ 'msg': 'Saving draft',
         \ 'on_data': {-> delete(draft)},
@@ -235,27 +223,27 @@ function! himalaya#domain#email#process_draft() abort
   endtry
 endfunction
 
-function! himalaya#domain#email#select_folder_then_copy() abort
-  call himalaya#domain#folder#open_picker('himalaya#domain#email#copy')
+function! himalaya#domain#email#select_mailbox_then_copy() abort
+  call himalaya#domain#mailbox#open_picker('himalaya#domain#email#copy')
 endfunction
 
-function! himalaya#domain#email#copy(folder) abort
+function! himalaya#domain#email#copy(mailbox) abort
   let id = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursor() : s:id
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
   call himalaya#request#plain({
-  \ 'cmd': 'message copy --account %s --folder %s %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), shellescape(a:folder), id],
+  \ 'cmd': 'message copy --account %s --from %s --to %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), shellescape(a:mailbox), id],
   \ 'msg': 'Copying email',
-  \ 'on_data': {-> himalaya#domain#email#list_with(account, folder, himalaya#domain#folder#current_page(), s:query)},
+  \ 'on_data': {-> himalaya#domain#email#list_with(account, mailbox, himalaya#domain#mailbox#current_page(), s:query)},
   \})
 endfunction
 
-function! himalaya#domain#email#select_folder_then_move() abort
-  call himalaya#domain#folder#open_picker('himalaya#domain#email#move')
+function! himalaya#domain#email#select_mailbox_then_move() abort
+  call himalaya#domain#mailbox#open_picker('himalaya#domain#email#move')
 endfunction
 
-function! himalaya#domain#email#move(folder) abort
+function! himalaya#domain#email#move(mailbox) abort
   let id = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursor() : s:id
 
   if get(g:, 'himalaya_always_confirm', 1) != 0
@@ -265,12 +253,12 @@ function! himalaya#domain#email#move(folder) abort
   endif
 
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
   call himalaya#request#plain({
-  \ 'cmd': 'message move --account %s --folder %s %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), shellescape(a:folder), id],
+  \ 'cmd': 'message move --account %s --from %s --to %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), shellescape(a:mailbox), id],
   \ 'msg': 'Moving email',
-  \ 'on_data': {-> himalaya#domain#email#list_with(account, folder, himalaya#domain#folder#current_page(), s:query)},
+  \ 'on_data': {-> himalaya#domain#email#list_with(account, mailbox, himalaya#domain#mailbox#current_page(), s:query)},
   \})
 endfunction
 
@@ -284,12 +272,12 @@ function! himalaya#domain#email#delete() abort range
   endif
 
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
   call himalaya#request#plain({
-  \ 'cmd': 'message delete --account %s --folder %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), ids],
+  \ 'cmd': 'message delete --account %s --mailbox %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), ids],
   \ 'msg': 'Deleting email',
-  \ 'on_data': {-> himalaya#domain#email#list_with(account, folder, himalaya#domain#folder#current_page(), s:query)},
+  \ 'on_data': {-> himalaya#domain#email#list_with(account, mailbox, himalaya#domain#mailbox#current_page(), s:query)},
   \})
 endfunction
 
@@ -297,20 +285,21 @@ function! himalaya#domain#email#flag_add() abort range
   let ids = stridx(bufname('%'), 'Himalaya envelopes') == 0 ? s:get_email_id_under_cursors(a:firstline, a:lastline) : s:id
   let flags = input(printf("Flag to add: "), "", "custom,himalaya#domain#email#flags#complete")
   redraw | echo
-  
+
   let flagsarr = split(flags)
   if len(flagsarr) == 0
     return
   endif
 
+  let flagargs = join(map(copy(flagsarr), '"-f " . shellescape(v:val)'))
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
 
   call himalaya#request#plain({
-  \ 'cmd': 'flag add --account %s --folder %s %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), flags, ids],
+  \ 'cmd': 'flag add --account %s --mailbox %s %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), flagargs, ids],
   \ 'msg': 'Adding flags: ' . flags . ' to email',
-  \ 'on_data': {-> himalaya#domain#email#list_with(account, folder, himalaya#domain#folder#current_page(), s:query)},
+  \ 'on_data': {-> himalaya#domain#email#list_with(account, mailbox, himalaya#domain#mailbox#current_page(), s:query)},
   \})
 endfunction
 
@@ -324,25 +313,15 @@ function! himalaya#domain#email#flag_remove() abort range
     return
   endif
 
+  let flagargs = join(map(copy(flagsarr), '"-f " . shellescape(v:val)'))
   let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
+  let mailbox = himalaya#domain#mailbox#current()
 
   call himalaya#request#plain({
-  \ 'cmd': 'flag remove --account %s --folder %s %s %s',
-  \ 'args': [shellescape(account), shellescape(folder), flags, ids],
+  \ 'cmd': 'flag remove --account %s --mailbox %s %s %s',
+  \ 'args': [shellescape(account), shellescape(mailbox), flagargs, ids],
   \ 'msg': 'Removing flags:' . flags . ' from email',
-  \ 'on_data': {-> himalaya#domain#email#list_with(account, folder, himalaya#domain#folder#current_page(), s:query)},
-  \})
-endfunction
-
-function! himalaya#domain#email#open_browser() abort
-  let account = himalaya#domain#account#current()
-  let folder = himalaya#domain#folder#current()
-  call himalaya#request#plain({
-  \ 'cmd': 'message export --account %s --folder %s --open %s',
-  \ 'args': [shellescape(account), shellescape(folder), s:id],
-  \ 'msg': 'Opening message in the browser',
-  \ 'on_data': {data -> himalaya#log#info(data)},
+  \ 'on_data': {-> himalaya#domain#email#list_with(account, mailbox, himalaya#domain#mailbox#current_page(), s:query)},
   \})
 endfunction
 

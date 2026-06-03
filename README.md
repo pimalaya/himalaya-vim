@@ -19,13 +19,12 @@
   - [`g:himalaya_always_confirm`](#ghimalaya_always_confirm)
   - [`g:himalaya_complete_contact_cmd`](#ghimalaya_complete_contact_cmd)
   - [`g:himalaya_config_path`](#ghimalaya_config_path)
-  - [`g:himalaya_custom_email_flags`](#ghimalaya_custom_email_flags)
   - [`g:himalaya_executable`](#ghimalaya_executable)
-  - [`g:himalaya_folder_picker_telescope_preview`](#ghimalaya_folder_picker_telescope_preview)
-  - [`g:himalaya_folder_picker`](#ghimalaya_folder_picker)
+  - [`g:himalaya_mailbox_picker_telescope_preview`](#ghimalaya_mailbox_picker_telescope_preview)
+  - [`g:himalaya_mailbox_picker`](#ghimalaya_mailbox_picker)
 - [Usage](#usage)
   - [List accounts](#list-accounts)
-  - [List folders](#list-folders)
+  - [List mailboxes](#list-mailboxes)
   - [List, filter and sort envelopes](#list-filter-and-sort-envelopes)
   - [Read message](#read-message)
   - [Write message](#write-message)
@@ -98,30 +97,21 @@ let g:himalaya_complete_contact_cmd = '<your completion command>'
 
 Override the default TOML configuration file.
 
-### `g:himalaya_custom_email_flags`
-
-Defines the list of additional custom flags that himalaya-vim should be aware
-of. They should be specified as a list of strings:
-
-```vim
-let g:himalaya_custom_email_flags = ['custom1', 'custom2']
-```
-
 ### `g:himalaya_executable`
 
 Defines a custom path for the himalaya binary. Defaults to `himalaya`.
 
-### `g:himalaya_folder_picker_telescope_preview`
+### `g:himalaya_mailbox_picker_telescope_preview`
 
-Enables folder preview when picking a folder with the `telescope.nvim` provider.
+Enables mailbox preview when picking a mailbox with the `telescope.nvim` provider.
 
 ```vim
-let g:himalaya_folder_picker_telescope_preview = 1
+let g:himalaya_mailbox_picker_telescope_preview = 1
 ```
 
-### `g:himalaya_folder_picker`
+### `g:himalaya_mailbox_picker`
 
-Defines the provider used for selecting folders (default keybind: `gm`):
+Defines the provider used for selecting mailboxes (default keybind: `gm`):
 
 - `native` (default): a vim native input
 - `fzf`: <https://github.com/junegunn/fzf.vim>
@@ -131,7 +121,7 @@ Defines the provider used for selecting folders (default keybind: `gm`):
 If no value given, the first loaded (and available) provider will be used (telescope > fzf > native).
 
 ```vim
-let g:himalaya_folder_picker = 'native' | 'fzf' | 'fzflua' | 'telescope'
+let g:himalaya_mailbox_picker = 'native' | 'fzf' | 'fzflua' | 'telescope'
 ```
 
 ## Usage
@@ -144,7 +134,7 @@ let g:himalaya_folder_picker = 'native' | 'fzf' | 'fzflua' | 'telescope'
 
 Opens an account picker to switch between configured accounts. The picker respects the `g:himalaya_account_picker` configuration or auto-detects available pickers (telescope > fzflua > fzf > native).
 
-### List folders
+### List mailboxes
 
 With the native picker (default):
 
@@ -167,13 +157,12 @@ With the [fzf.vim](https://github.com/junegunn/fzf.vim) picker:
 | Function                                               | Keybind   |
 |--------------------------------------------------------|-----------|
 | Change the current account                             | `gA`      |
-| Change the current folder                              | `gm`      |
+| Change the current mailbox                             | `gm`      |
 | Show previous page                                     | `gp`      |
 | Show next page                                         | `gn`      |
 | Read email under cursor                                | `<Enter>` |
 | Write a new email                                      | `gw`      |
 | Reply to the email under cursor                        | `gr`      |
-| Reply all to the email under cursor                    | `gR`      |
 | Forward the email under cursor                         | `gf`      |
 | Download all attachments of email under cursor         | `ga`      |
 | Copy the email under cursor                            | `gC`      |
@@ -187,24 +176,23 @@ Keybinds can be customized:
 
 ```vim
 nmap gA   <plug>(himalaya-account-select)
-nmap gm   <plug>(himalaya-folder-select)
-nmap gp   <plug>(himalaya-folder-select-previous-page)
-nmap gn   <plug>(himalaya-folder-select-next-page)
+nmap gm   <plug>(himalaya-mailbox-select)
+nmap gp   <plug>(himalaya-mailbox-select-previous-page)
+nmap gn   <plug>(himalaya-mailbox-select-next-page)
 nmap <cr> <plug>(himalaya-email-read)
 nmap gw   <plug>(himalaya-email-write)
 nmap gr   <plug>(himalaya-email-reply)
-nmap gR   <plug>(himalaya-email-reply-all)
 nmap gf   <plug>(himalaya-email-forward)
 nmap ga   <plug>(himalaya-email-download-attachments)
-nmap gC   <plug>(himalaya-email-copy)
-nmap gM   <plug>(himalaya-email-move)
+nmap gC   <plug>(himalaya-email-select-mailbox-then-copy)
+nmap gM   <plug>(himalaya-email-select-mailbox-then-move)
 nmap gD   <plug>(himalaya-email-delete)
 nmap gFa  <plug>(himalaya-email-flag-add)
 nmap gFr  <plug>(himalaya-email-flag-remove)
-nmap g/   <plug>(himalaya-set-list-envelopes-query)
+nmap g/   <plug>(himalaya-email-set-list-envelopes-query)
 ```
 
-*See `himalaya envelopes list --help` for more detailed information about the query API.*
+*See `himalaya envelope search --help` for more detailed information about the query API.*
 
 ### Read message
 
@@ -212,26 +200,22 @@ nmap g/   <plug>(himalaya-set-list-envelopes-query)
 |--------------------------------|---------|
 | Write a new email              | `gw`    |
 | Reply to the email             | `gr`    |
-| Reply all to the email         | `gR`    |
 | Forward the email              | `gf`    |
 | Download all email attachments | `ga`    |
 | Copy the email                 | `gC`    |
 | Move the email                 | `gM`    |
 | Delete the email               | `gD`    |
-| Open the mail in the browser   | `go`    |
 
 Keybinds can be customized:
 
 ```vim
 nmap gw <plug>(himalaya-email-write)
 nmap gr <plug>(himalaya-email-reply)
-nmap gR <plug>(himalaya-email-reply-all)
 nmap gf <plug>(himalaya-email-forward)
 nmap ga <plug>(himalaya-email-download-attachments)
-nmap gC <plug>(himalaya-email-copy)
-nmap gM <plug>(himalaya-email-move)
+nmap gC <plug>(himalaya-email-select-mailbox-then-copy)
+nmap gM <plug>(himalaya-email-select-mailbox-then-move)
 nmap gD <plug>(himalaya-email-delete)
-nmap go <plug>(himalaya-email-open-browser)
 ```
 
 ### Write message

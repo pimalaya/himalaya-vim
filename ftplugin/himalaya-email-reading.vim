@@ -6,13 +6,11 @@ setlocal foldmethod=expr
 setlocal nomodifiable
 
 call himalaya#keybinds#define([
-  \['n', 'gw', 'email#write'                  ],
-  \['n', 'gr', 'email#reply'                  ],
-  \['n', 'gR', 'email#reply_all'              ],
-  \['n', 'gf', 'email#forward'                ],
-  \['n', 'ga', 'email#download_attachments'   ],
-  \['n', 'gC', 'email#select_folder_then_copy'],
-  \['n', 'gM', 'email#select_folder_then_move'],
-  \['n', 'gD', 'email#delete'                 ],
-  \['n', 'go', 'email#open_browser'           ],
+  \['n', 'gw', 'email#write'                   ],
+  \['n', 'gr', 'email#reply'                   ],
+  \['n', 'gf', 'email#forward'                 ],
+  \['n', 'ga', 'email#download_attachments'    ],
+  \['n', 'gC', 'email#select_mailbox_then_copy'],
+  \['n', 'gM', 'email#select_mailbox_then_move'],
+  \['n', 'gD', 'email#delete'                  ],
 \])

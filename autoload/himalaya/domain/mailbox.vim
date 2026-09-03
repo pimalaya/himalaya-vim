@@ -35,6 +35,8 @@ endfunction
 function! s:open_picker(mailboxes, on_select_mailbox) abort
   if exists('g:himalaya_mailbox_picker')
     let picker = g:himalaya_mailbox_picker
+  elseif exists('g:himalaya_folder_picker')
+    let picker = g:himalaya_folder_picker
   else
     if &rtp =~ 'telescope'
       let picker = 'telescope'

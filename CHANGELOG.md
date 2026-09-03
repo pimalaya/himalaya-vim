@@ -11,10 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added support for `fzf-lua` as a mailbox picker.
 - Added option `g:himalaya_config_path` to customize the TOML configuration file.
+- Implemented `himalaya#domain#email#add_attachment()` for the `<plug>(himalaya-email-add-attachment)` mapping.
+- Added backward compatibility aliases `:HimalayaFolders` and `:HimalayaFolder`, and config fallback for `g:himalaya_folder_picker`.
 
 ### Changed
 
 - Aligned plugin with Himalaya CLI v2: every shared CLI invocation now uses `mailbox` instead of `folder`, `--json` instead of `--output json`, and the `message compose` / `reply` / `forward` / `send` / `add` flow instead of the dropped `template` subcommands.
+- Updated `syntax/himalaya-email-listing.vim` to recognize CLI v2 Unicode box-drawing tables (`│`, `┆`, `┌`, `└`, `╞`, `╡`, etc.) and added `HimalayaSize` column highlighting.
+- Added `--seen` flag to `message read` so reading an email marks it as seen.
 - Renamed user-facing option `g:himalaya_folder_picker` to `g:himalaya_mailbox_picker`.
 - Renamed user-facing option `g:himalaya_folder_picker_telescope_preview` to `g:himalaya_mailbox_picker_telescope_preview`.
 - Renamed user-facing commands `:HimalayaFolders` / `:HimalayaFolder` to `:HimalayaMailboxes` / `:HimalayaMailbox`.
@@ -30,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed `envelope list` erroring on CLI v2 by routing non-empty queries to `envelope search`.
+- Fixed email ID parsing to extract cell tokens between table delimiters instead of relying on digits `\d\+`, adding support for alphanumeric IDs and ignoring border rules.
+- Fixed `process_draft()` sending workflow: only mark `answered` on actual replies, chain after sending succeeds, and clean up temporary draft files.
+- Removed leftover debugging `echom s:stdout` from Neovim async job runner.
 - Fixed changing mailbox using telescope due to script function not accessible from lua env. [#47]
 - Fixed copy, move and delete not working when using multiple ids. [#147]
 - Fixed too long JSON string not being processed. [#98]

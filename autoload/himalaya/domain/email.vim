@@ -18,9 +18,16 @@ function! himalaya#domain#email#list(...) abort
 endfunction
 
 function! himalaya#domain#email#list_with(account, mailbox, page, query) abort
+  if empty(a:query)
+    let cmd = 'envelope list --mailbox %s --account %s --max-width %d --page-size %d --page %d'
+    let args = [shellescape(a:mailbox), shellescape(a:account), s:bufwidth(), winheight(0) - 1, a:page]
+  else
+    let cmd = 'envelope search --mailbox %s --account %s --max-width %d --page-size %d --page %d %s'
+    let args = [shellescape(a:mailbox), shellescape(a:account), s:bufwidth(), winheight(0) - 1, a:page, a:query]
+  endif
   call himalaya#request#plain({
-  \ 'cmd': 'envelope list --mailbox %s --account %s --max-width %d --page-size %d --page %d %s',
-  \ 'args': [shellescape(a:mailbox), shellescape(a:account), s:bufwidth(), winheight(0) - 1, a:page, a:query],
+  \ 'cmd': cmd,
+  \ 'args': args,
   \ 'msg': printf('Fetching %s envelopes', a:mailbox),
   \ 'on_data': {data -> s:list_with(a:mailbox, a:page, data)}
   \})
@@ -47,7 +54,7 @@ function! himalaya#domain#email#read() abort
   let account = himalaya#domain#account#current()
   let mailbox = himalaya#domain#mailbox#current()
   call himalaya#request#plain({
-  \ 'cmd': 'message read --account %s --mailbox %s %s',
+  \ 'cmd': 'message read --account %s --mailbox %s --seen %s',
   \ 'args': [shellescape(account), shellescape(mailbox), s:id],
   \ 'msg': printf('Fetching email %s', s:id),
   \ 'on_data': {data -> s:read(s:id, data)},
@@ -184,19 +191,14 @@ function! himalaya#domain#email#process_draft() abort
       if choice == 's'
         let draft = tempname()
 	call writefile(getline(1, '$'), draft)
+        let is_reply = bufname('%') =~# '^Himalaya reply' && !empty(s:id)
+        let reply_id = s:id
 
-        call himalaya#request#plain({
+        return himalaya#request#plain({
         \ 'cmd': 'message send --account %s < %s',
         \ 'args': [shellescape(account), shellescape(draft)],
         \ 'msg': 'Sending email',
-        \ 'on_data': {-> delete(s:draft)},
-        \})
-
-        return himalaya#request#plain({
-        \ 'cmd': 'flag add --account %s --mailbox %s -f answered %s',
-        \ 'args': [shellescape(account), shellescape(mailbox), shellescape(s:id)],
-        \ 'msg': 'Adding answered flag',
-        \ 'on_data': {-> delete(draft)},
+        \ 'on_data': {-> s:on_send_success(account, mailbox, is_reply, reply_id, draft)},
         \})
       elseif choice == 'd'
         let draft = tempname()
@@ -221,6 +223,17 @@ function! himalaya#domain#email#process_draft() abort
       call himalaya#log#err(v:exception)
     endif
   endtry
+endfunction
+
+function! s:on_send_success(account, mailbox, is_reply, reply_id, draft) abort
+  call delete(a:draft)
+  if a:is_reply
+    call himalaya#request#plain({
+    \ 'cmd': 'flag add --account %s --mailbox %s -f answered %s',
+    \ 'args': [shellescape(a:account), shellescape(a:mailbox), shellescape(a:reply_id)],
+    \ 'msg': 'Adding answered flag',
+    \})
+  endif
 endfunction
 
 function! himalaya#domain#email#select_mailbox_then_copy() abort
@@ -343,24 +356,54 @@ function! s:bufwidth() abort " https://newbedev.com/get-usable-window-width-in-v
   return width - numwidth - foldwidth - signwidth
 endfunction
 
+function! himalaya#domain#email#add_attachment() abort
+  let path = input('Path to attachment: ', '', 'file')
+  redraw | echo
+  if empty(path)
+    return
+  endif
+  if !filereadable(expand(path))
+    call himalaya#log#err('File not found: ' . path)
+    return
+  endif
+  let abs_path = fnamemodify(expand(path), ':p')
+  call append(line('$'), printf('<#part filename="%s">', abs_path))
+  call himalaya#log#info('Added attachment: ' . abs_path)
+endfunction
+
 function! s:get_email_id_from_line(line) abort
+  if a:line =~# '^[│|]'
+    let parts = split(a:line, '[│┆|]')
+    if len(parts) > 0
+      let id = trim(parts[0])
+      if id !=# 'ID' && id !~# '^[─═-]*$' && !empty(id)
+        return id
+      endif
+    endif
+  endif
   return matchstr(a:line, '\d\+')
 endfunction
 
 function! s:get_email_id_under_cursor() abort
-  try
-    return s:get_email_id_from_line(getline('.'))
-  catch
+  let id = s:get_email_id_from_line(getline('.'))
+  if empty(id)
     throw 'email not found'
-  endtry
+  endif
+  return id
 endfunction
 
 function! s:get_email_id_under_cursors(from, to) abort
-  try
-    return join(map(range(a:from, a:to), 's:get_email_id_from_line(getline(v:val))'))
-  catch
+  let ids = []
+  for lnum in range(a:from, a:to)
+    let id = s:get_email_id_from_line(getline(lnum))
+    if !empty(id)
+      call add(ids, id)
+    endif
+  endfor
+  if empty(ids)
     throw 'emails not found'
-  endtry
+  endif
+  return join(ids, ' ')
 endfunction
 
 function! s:close_open_buffers(name) abort

@@ -9,7 +9,7 @@ function! himalaya#job#neovim#start(cmd, on_data) abort
   let job = jobstart(cmd[0], {
   \ 'on_stdout': {_, lines -> s:on_stdout(lines)},
   \ 'on_stderr': {_, lines -> s:on_stderr(lines)},
-  \ 'on_exit': {-> s:on_exit(a:on_data)},
+  \ 'on_exit': {_, exit_code -> s:on_exit(exit_code, a:on_data)},
   \})
 
   if len(cmd) > 1
@@ -26,16 +26,22 @@ function! s:on_stderr(lines) abort
   let s:stderr += s:compact_lines(a:lines)
 endfunction
 
-function! s:on_exit(callback) abort
+function! s:on_exit(exit_code, callback) abort
+  if a:exit_code != 0
+    call s:log_error()
+  endif
+
+  call a:callback(s:stdout)
+endfunction
+
+function! s:log_error() abort
   if !empty(s:stderr)
     for line in s:stderr
       call himalaya#log#err(line)
     endfor
-    redraw
-    throw 'CLI error, see :messages for more information'
   endif
-  echom s:stdout
-  call a:callback(s:stdout)
+  redraw
+  throw 'CLI error, see :messages for more information'
 endfunction
 
 function! s:compact_lines(lines) abort

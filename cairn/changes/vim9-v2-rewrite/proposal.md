@@ -1,7 +1,7 @@
 ---
 cairn: change
 id: vim9-v2-rewrite
-status: active
+status: landed
 created: 2026-09-28
 ---
 
@@ -28,7 +28,7 @@ A 2.0 release of himalaya-vim, written in Vim9 script, requiring Vim 9.1 and Him
 **Writing.** Hand-edited messages with attachments are what MML is for, and Vim has no MML support, so composition is delegated to the CLI's flags instead:
 
 - The buffer is prefilled with the template `message compose/reply/forward` prints (no `--send`): the `From`, `To`, `Cc`, `Bcc` and `Subject` headers, a blank line, then the plain text body, quote included. The source ID and the command are stored on the buffer.
-- A mapping prompts for a file (with completion) and adds it to the buffer's attachment list. A second mapping opens a dedicated attachment buffer listing the files, where they are added and removed; its count shows in the writing buffer's `winbar`.
+- A mapping prompts for a file (with completion) and adds it to the buffer's attachment list. A second mapping opens a dedicated attachment buffer listing the files, where they are added and removed; its count shows in the writing buffer's status line.
 - On send, the plugin parses the header block into `--from`, `--to`, `--cc`, `--bcc` and `--subject`, writes the body to a temporary file for `--body-file`, adds one `--attach` per file, and runs the stored command with `--send` (`message reply <id>` or `message forward <id>` keeps `In-Reply-To`, `References` and the source). Saving a draft is the same call with `--save <drafts>` instead of `--send`.
 - Headers other than the five above are not carried. After a successful reply send, the plugin flags the stored source ID `answered`.
 

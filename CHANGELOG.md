@@ -9,28 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added support for `fzf-lua` as a mailbox picker.
-- Added option `g:himalaya_config_path` to customize the TOML configuration file.
+- Added `:HimalayaAccounts` and `gA`, an account picker, with the `g:himalaya_account_picker` option.
+- Added option `g:himalaya_config_path` to pass configuration files to the CLI.
+- Added `ge` (`<Plug>(himalaya-email-edit)`) to resume a message, a draft included, as a new one with its attachments.
+- Added `gA` (`<Plug>(himalaya-email-attachments)`) in writing buffers, listing the attached files for editing, and an attachment count in their status line.
+- Added a test suite running the plugin against a stub CLI.
 
 ### Changed
 
-- Aligned plugin with Himalaya CLI v2: every shared CLI invocation now uses `mailbox` instead of `folder`, `--json` instead of `--output json`, and the `message compose` / `reply` / `forward` / `send` / `add` flow instead of the dropped `template` subcommands.
-- Renamed user-facing option `g:himalaya_folder_picker` to `g:himalaya_mailbox_picker`.
-- Renamed user-facing option `g:himalaya_folder_picker_telescope_preview` to `g:himalaya_mailbox_picker_telescope_preview`.
-- Renamed user-facing commands `:HimalayaFolders` / `:HimalayaFolder` to `:HimalayaMailboxes` / `:HimalayaMailbox`.
-- Renamed `<plug>(himalaya-folder-*)` mappings to `<plug>(himalaya-mailbox-*)`.
-- Renamed `<plug>(himalaya-email-copy)` and `<plug>(himalaya-email-move)` to `<plug>(himalaya-email-select-mailbox-then-copy)` and `<plug>(himalaya-email-select-mailbox-then-move)` to match the underlying function names.
-- Disabled CLI logs for them not to mess up with errors. [#21]
+- **BREAKING**: rewrote the plugin in Vim9 script, requiring Vim 9.1.
+- **BREAKING**: aligned the plugin with Himalaya CLI v2, which it now requires.
+
+  Accounts, signatures and mailbox aliases come from the CLI configuration only. Unset, the account and the mailbox are the CLI defaults rather than `INBOX`.
+
+- **BREAKING**: composition goes through the CLI composer flags instead of templates and MML.
+
+  A writing buffer holds the plain text headers and body, and attachments live in a list next to it. `:write` asks to send, save as a draft or cancel, instead of prompting on leaving the buffer.
+
+- Renamed the `folder` options, commands and mappings to `mailbox`, keeping `:HimalayaFolders` and `:HimalayaFolder` as aliases.
+- Replaced the native pickers by a popup menu, and made fzf.vim the default picker when installed.
 
 ### Removed
 
-- Removed the reply-all keybind and `<plug>(himalaya-email-reply-all)`: Himalaya CLI v2 dropped the `--all` flag from `message reply`. Use `gr` and add the extra recipients in the compose buffer.
-- Removed the open-in-browser keybind and `<plug>(himalaya-email-open-browser)`: Himalaya CLI v2 dropped `message export --open`.
-- Removed option `g:himalaya_custom_email_flags`: shared `flag add` / `flag remove` no longer take arbitrary flag names; v2 will reject anything outside `seen`, `answered`, `flagged`, `draft` at runtime.
+- **BREAKING**: removed Neovim support, the Lua code, and the Telescope and fzf-lua pickers with `g:himalaya_folder_picker_telescope_preview`.
+- Removed the reply-all and open-in-browser keybinds, which CLI v2 no longer backs.
+- Removed option `g:himalaya_custom_email_flags`: CLI v2 flags are `seen`, `answered`, `flagged` and `draft`.
 
 ### Fixed
 
-- Fixed changing mailbox using telescope due to script function not accessible from lua env. [#47]
+- Fixed a successful command failing because the CLI logged on stderr: only the exit code tells a failure now, and its error report is shown.
+- Fixed the `answered` flag landing on the last read message instead of the replied one.
+- Fixed envelope ids other than numbers, such as Maildir file names, not being recognized in the listing.
+- Fixed concurrent commands mixing their outputs.
 - Fixed copy, move and delete not working when using multiple ids. [#147]
 - Fixed too long JSON string not being processed. [#98]
 

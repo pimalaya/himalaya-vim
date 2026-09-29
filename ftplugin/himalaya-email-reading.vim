@@ -1,16 +1,24 @@
+vim9script
+
+if exists('b:did_ftplugin')
+  finish
+endif
+b:did_ftplugin = true
+
+import autoload 'himalaya/keybinds.vim'
+
 setlocal bufhidden=wipe
 setlocal buftype=nofile
-setlocal filetype=mail
-setlocal foldexpr=himalaya#domain#email#thread#fold(v:lnum)
+setlocal foldexpr=getline(v:lnum)=~'^>'
 setlocal foldmethod=expr
 setlocal nomodifiable
 
-call himalaya#keybinds#define([
-  \['n', 'gw', 'email#write'                   ],
-  \['n', 'gr', 'email#reply'                   ],
-  \['n', 'gf', 'email#forward'                 ],
-  \['n', 'ga', 'email#download_attachments'    ],
-  \['n', 'gC', 'email#select_mailbox_then_copy'],
-  \['n', 'gM', 'email#select_mailbox_then_move'],
-  \['n', 'gD', 'email#delete'                  ],
-\])
+keybinds.Define([
+  ['n', 'gw', 'email-write'],
+  ['n', 'gr', 'email-reply'],
+  ['n', 'gf', 'email-forward'],
+  ['n', 'ga', 'email-download-attachments'],
+  ['n', 'gC', 'email-select-mailbox-then-copy'],
+  ['n', 'gM', 'email-select-mailbox-then-move'],
+  ['n', 'gD', 'email-delete'],
+])

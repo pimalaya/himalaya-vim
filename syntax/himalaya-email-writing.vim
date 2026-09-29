@@ -1,7 +1,9 @@
+vim9script
+
 if exists('b:current_syntax')
   finish
 endif
 
 runtime! syntax/mail.vim
 
-let b:current_syntax = 'himalaya-email-writing'
+b:current_syntax = 'himalaya-email-writing'

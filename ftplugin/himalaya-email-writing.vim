@@ -1,18 +1,28 @@
-setlocal filetype=mail
-setlocal foldexpr=himalaya#domain#email#thread#fold(v:lnum)
+vim9script
+
+if exists('b:did_ftplugin')
+  finish
+endif
+b:did_ftplugin = true
+
+import autoload 'himalaya/compose.vim'
+import autoload 'himalaya/keybinds.vim'
+
+setlocal foldexpr=getline(v:lnum)=~'^>'
 setlocal foldmethod=expr
-setlocal startofline
+setlocal statusline=%f\ %h%m%r%=%{himalaya#compose#Status()}\ %l,%c
 
 if exists('g:himalaya_complete_contact_cmd')
-  setlocal completefunc=himalaya#domain#email#complete_contact
+  setlocal completefunc=himalaya#compose#CompleteContact
 endif
 
-call himalaya#keybinds#define([
-  \['n', 'ga', 'email#add_attachment'],
-\])
+keybinds.Define([
+  ['n', 'ga', 'email-add-attachment'],
+  ['n', 'gA', 'email-attachments'],
+])
 
-augroup himalaya_write
+augroup himalaya_writing
   autocmd! * <buffer>
-  autocmd  BufWriteCmd <buffer> call himalaya#domain#email#save_draft()
-  autocmd  BufLeave    <buffer> call himalaya#domain#email#process_draft()
-augroup end
+  autocmd BufWriteCmd <buffer> compose.Submit()
+  autocmd BufWipeout <buffer> compose.Cleanup(str2nr(expand('<abuf>')))
+augroup END

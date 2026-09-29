@@ -12,231 +12,98 @@
   <p><em>We are looking for new maintainer(s), feel free to contact us! (https://github.com/pimalaya/himalaya-vim/issues/28)</em></p>
 </div>
 
+Himalaya Vim is a thin layer over the [Himalaya CLI](https://github.com/pimalaya/himalaya): accounts, identities, signatures and mailbox aliases live in the CLI configuration, and the plugin only drives the CLI from Vim.
+
+It requires **Vim 9.1** or later and **Himalaya CLI v2**. Neovim is not supported: Neovim users are better served by the mail plugins of its own community.
+
 ## Table of contents
 
 - [Installation](#installation)
 - [Configuration](#configuration)
-  - [`g:himalaya_account_picker`](#ghimalaya_account_picker)
-  - [`g:himalaya_always_confirm`](#ghimalaya_always_confirm)
-  - [`g:himalaya_complete_contact_cmd`](#ghimalaya_complete_contact_cmd)
-  - [`g:himalaya_config_path`](#ghimalaya_config_path)
-  - [`g:himalaya_executable`](#ghimalaya_executable)
-  - [`g:himalaya_mailbox_picker_telescope_preview`](#ghimalaya_mailbox_picker_telescope_preview)
-  - [`g:himalaya_mailbox_picker`](#ghimalaya_mailbox_picker)
 - [Usage](#usage)
-  - [List accounts](#list-accounts)
-  - [List mailboxes](#list-mailboxes)
-  - [List, filter and sort envelopes](#list-filter-and-sort-envelopes)
-  - [Read message](#read-message)
-  - [Write message](#write-message)
+  - [List envelopes](#list-envelopes)
+  - [Read a message](#read-a-message)
+  - [Write a message](#write-a-message)
+- [Development](#development)
 - [Sponsoring](#sponsoring)
 
 ## Installation
 
-First you need to install and configure the [Himalaya CLI](https://github.com/pimalaya/himalaya). Then you can install this plugin with your favorite plugin manager:
-
-### [packer.nvim](https://github.com/wbthomason/packer.nvim)
-
-```lua
-use "https://github.com/pimalaya/himalaya-vim"
-```
-
-```vim
-:PackerSync
-```
-
-### [vim-plug](https://github.com/junegunn/vim-plug)
+Install and configure the [Himalaya CLI](https://github.com/pimalaya/himalaya) first, then the plugin with your plugin manager, for example [vim-plug](https://github.com/junegunn/vim-plug):
 
 ```vim
 Plug 'https://github.com/pimalaya/himalaya-vim'
 ```
 
-```vim
-:PlugInstall
+Or as a native package:
+
+```sh
+git clone https://github.com/pimalaya/himalaya-vim ~/.vim/pack/pimalaya/start/himalaya-vim
 ```
+
+The plugin needs `filetype plugin on` and `syntax on`.
 
 ## Configuration
 
-It is highly recommanded to have those Vim options on:
+Every option is about Vim; everything about accounts belongs to the CLI configuration.
 
-```vim
-syntax on
-filetype plugin on
-set hidden
-```
-
-### `g:himalaya_account_picker`
-
-Defines the provider used for selecting accounts (default keybind: `gA`):
-
-- `native` (default): a vim native input
-- `fzf`: <https://github.com/junegunn/fzf.vim>
-- `fzflua`: <https://github.com/ibhagwan/fzf-lua>
-- `telescope`: <https://github.com/nvim-telescope/telescope.nvim>
-
-If no value given, the first loaded (and available) provider will be used (telescope > fzf > native).
-
-```vim
-let g:himalaya_account_picker = 'native' | 'fzf' | 'fzflua' | 'telescope'
-```
-
-### `g:himalaya_always_confirm`
-
-Defines whenever Himalaya Vim should always ask before moving or deleting a message. Defaults to `1`.
-
-### `g:himalaya_complete_contact_cmd`
-
-Defines the command to use for contact completion. When this is set, `completefunc` will be set when composing emails so that contacts can be completed with `<C-x><C-u>`.
-
-The command must print each possible result on its own line. Each line must contain tab-separated fields; the first must be the email address, and the second, if present, must be the name. `%s` in the command will be replaced with the search query.
-
-```vim
-let g:himalaya_complete_contact_cmd = '<your completion command>'
-```
-
-### `g:himalaya_config_path`
-
-Override the default TOML configuration file.
-
-### `g:himalaya_executable`
-
-Defines a custom path for the himalaya binary. Defaults to `himalaya`.
-
-### `g:himalaya_mailbox_picker_telescope_preview`
-
-Enables mailbox preview when picking a mailbox with the `telescope.nvim` provider.
-
-```vim
-let g:himalaya_mailbox_picker_telescope_preview = 1
-```
-
-### `g:himalaya_mailbox_picker`
-
-Defines the provider used for selecting mailboxes (default keybind: `gm`):
-
-- `native` (default): a vim native input
-- `fzf`: <https://github.com/junegunn/fzf.vim>
-- `fzflua`: <https://github.com/ibhagwan/fzf-lua>
-- `telescope`: <https://github.com/nvim-telescope/telescope.nvim>
-
-If no value given, the first loaded (and available) provider will be used (telescope > fzf > native).
-
-```vim
-let g:himalaya_mailbox_picker = 'native' | 'fzf' | 'fzflua' | 'telescope'
-```
+- `g:himalaya_executable`: path to the `himalaya` binary, `himalaya` by default.
+- `g:himalaya_config_path`: CLI configuration file(s), passed as `--config`.
+- `g:himalaya_account_picker`, `g:himalaya_mailbox_picker`: `native` (a popup menu) or `fzf` ([fzf.vim](https://github.com/junegunn/fzf.vim)), `fzf` by default when fzf.vim is installed.
+- `g:himalaya_always_confirm`: ask before moving or deleting messages, `v:true` by default.
+- `g:himalaya_complete_contact_cmd`: shell command completing contacts with `<C-x><C-u>` in a writing buffer. `%s` is replaced by the search, and each output line holds an address, then optionally a tab and a name.
 
 ## Usage
 
-### List accounts
+### List envelopes
+
+`:Himalaya [account]` lists the default mailbox of the default account, or of the given one.
+
+| Function                                           | Keybind   | Plug                                          |
+|----------------------------------------------------|-----------|-----------------------------------------------|
+| Change the account                                 | `gA`      | `himalaya-account-select`                     |
+| Change the mailbox                                 | `gm`      | `himalaya-mailbox-select`                     |
+| Previous / next page                               | `gp`/`gn` | `himalaya-mailbox-select-{previous,next}-page` |
+| Search envelopes, see `himalaya envelope search -h` | `g/`      | `himalaya-email-set-list-envelopes-query`     |
+| Read the message                                   | `<CR>`    | `himalaya-email-read`                         |
+| Write a new message                                | `gw`      | `himalaya-email-write`                        |
+| Reply to / forward the message                     | `gr`/`gf` | `himalaya-email-{reply,forward}`              |
+| Edit the message as a new one (resume a draft)     | `ge`      | `himalaya-email-edit`                         |
+| Download the attachments                           | `ga`      | `himalaya-email-download-attachments`         |
+| Copy / move the message(s)                         | `gC`/`gM` | `himalaya-email-select-mailbox-then-{copy,move}` |
+| Delete the message(s)                              | `gD`      | `himalaya-email-delete`                       |
+| Add / remove flags                                 | `gFa`/`gFr` | `himalaya-email-flag-{add,remove}`          |
+
+Copy, move, delete and flags also act on a visual selection. Every keybind maps a `<Plug>(...)` mapping, and is skipped when you already mapped that plug yourself:
 
 ```vim
-:HimalayaAccounts
+nmap <Leader>r <Plug>(himalaya-email-reply)
 ```
 
-Opens an account picker to switch between configured accounts. The picker respects the `g:himalaya_account_picker` configuration or auto-detects available pickers (telescope > fzflua > fzf > native).
+### Read a message
 
-### List mailboxes
+The reading buffer shares `gw`, `gr`, `gf`, `ga`, `gC`, `gM` and `gD` with the listing, and folds quoted lines.
 
-With the native picker (default):
+### Write a message
 
-![screenshot](https://user-images.githubusercontent.com/10437171/113631817-51eb3180-966a-11eb-8b13-cd1f1f2539ab.jpeg)
+A writing buffer holds the `From`, `To`, `Cc`, `Bcc` and `Subject` headers, a blank line, then the plain text body, quote included for a reply or a forward. The signature is not shown: the CLI appends the one its configuration declares.
 
-With the [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) picker:
+| Function                        | Keybind | Plug                          |
+|---------------------------------|---------|-------------------------------|
+| Attach a file                   | `ga`    | `himalaya-email-add-attachment` |
+| Manage the attached files       | `gA`    | `himalaya-email-attachments`  |
 
-![screenshot](https://user-images.githubusercontent.com/10437171/113631294-86122280-9669-11eb-8074-1c43c36b65a9.jpeg)
+`gA` opens the attachment list, one path per line: edit it like any buffer, then `:write` to apply it. The status line counts the attached files.
 
-With the [fzf.vim](https://github.com/junegunn/fzf.vim) picker:
+`:write` in a writing buffer asks whether to send the message, save it as a draft (in the mailbox the `drafts` alias resolves to), or cancel. `:quit!` discards it. Sending a reply flags the replied message `answered`, and sending or saving a resumed message deletes the original.
 
-![screenshot](https://user-images.githubusercontent.com/10437171/113631382-acd05900-9669-11eb-817d-c28fd5d9574c.jpeg)
+## Development
 
-### List, filter and sort envelopes
+The tests run the plugin against a stub CLI, headless:
 
-```vim
-:Himalaya
+```sh
+vim -Nu NONE -i NONE -es -S tests/run.vim
 ```
-
-| Function                                               | Keybind   |
-|--------------------------------------------------------|-----------|
-| Change the current account                             | `gA`      |
-| Change the current mailbox                             | `gm`      |
-| Show previous page                                     | `gp`      |
-| Show next page                                         | `gn`      |
-| Read email under cursor                                | `<Enter>` |
-| Write a new email                                      | `gw`      |
-| Reply to the email under cursor                        | `gr`      |
-| Forward the email under cursor                         | `gf`      |
-| Download all attachments of email under cursor         | `ga`      |
-| Copy the email under cursor                            | `gC`      |
-| Move the email under cursor                            | `gM`      |
-| Delete email(s) under cursor or visual selection       | `gD`      |
-| Add the specified flag to the selected email(s)        | `gFa`     |
-| Remove the specified flag from the selected email(s)   | `gFr`     |
-| Filter and sort envelopes according to the given query | `g/`      |
-
-Keybinds can be customized:
-
-```vim
-nmap gA   <plug>(himalaya-account-select)
-nmap gm   <plug>(himalaya-mailbox-select)
-nmap gp   <plug>(himalaya-mailbox-select-previous-page)
-nmap gn   <plug>(himalaya-mailbox-select-next-page)
-nmap <cr> <plug>(himalaya-email-read)
-nmap gw   <plug>(himalaya-email-write)
-nmap gr   <plug>(himalaya-email-reply)
-nmap gf   <plug>(himalaya-email-forward)
-nmap ga   <plug>(himalaya-email-download-attachments)
-nmap gC   <plug>(himalaya-email-select-mailbox-then-copy)
-nmap gM   <plug>(himalaya-email-select-mailbox-then-move)
-nmap gD   <plug>(himalaya-email-delete)
-nmap gFa  <plug>(himalaya-email-flag-add)
-nmap gFr  <plug>(himalaya-email-flag-remove)
-nmap g/   <plug>(himalaya-email-set-list-envelopes-query)
-```
-
-*See `himalaya envelope search --help` for more detailed information about the query API.*
-
-### Read message
-
-| Function                       | Keybind |
-|--------------------------------|---------|
-| Write a new email              | `gw`    |
-| Reply to the email             | `gr`    |
-| Forward the email              | `gf`    |
-| Download all email attachments | `ga`    |
-| Copy the email                 | `gC`    |
-| Move the email                 | `gM`    |
-| Delete the email               | `gD`    |
-
-Keybinds can be customized:
-
-```vim
-nmap gw <plug>(himalaya-email-write)
-nmap gr <plug>(himalaya-email-reply)
-nmap gf <plug>(himalaya-email-forward)
-nmap ga <plug>(himalaya-email-download-attachments)
-nmap gC <plug>(himalaya-email-select-mailbox-then-copy)
-nmap gM <plug>(himalaya-email-select-mailbox-then-move)
-nmap gD <plug>(himalaya-email-delete)
-```
-
-### Write message
-
-| Function       | Keybind |
-|----------------|---------|
-| Add attachment | `ga`    |
-
-Keybinds can be customized:
-
-```vim
-nmap ga <plug>(himalaya-email-add-attachment)
-```
-
-When you exit this special buffer, you will be prompted 4 choices:
-
-- `send`: sends the email
-- `draft`: saves the email locally
-- `quit`: quits the buffer without saving
-- `cancel`: goes back to the email edition
 
 ## Sponsoring
 

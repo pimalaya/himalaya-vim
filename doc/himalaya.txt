@@ -1,0 +1,73 @@
+*himalaya.txt*  Vim front-end for the Himalaya CLI
+
+Requires Vim 9.1 and Himalaya CLI v2. Accounts, identities, signatures and
+mailbox aliases live in the CLI configuration: the plugin only drives the
+CLI.
+
+==============================================================================
+COMMANDS                                                   *himalaya-commands*
+
+:Himalaya [account]         List the envelopes of the default mailbox.
+:HimalayaAccounts           Pick an account.
+:HimalayaAccount {name}     Switch to an account.
+:HimalayaMailboxes          Pick a mailbox.
+:HimalayaMailbox {id}       Switch to a mailbox.
+:HimalayaNextPage           Show the next page of envelopes.
+:HimalayaPreviousPage       Show the previous page of envelopes.
+:HimalayaWrite              Write a new message.
+:HimalayaReply              Reply to the message.
+:HimalayaForward            Forward the message.
+:HimalayaEdit               Resume the message, attachments included.
+:[range]HimalayaCopy        Copy the message(s) to a picked mailbox.
+:[range]HimalayaMove        Move the message(s) to a picked mailbox.
+:[range]HimalayaDelete      Delete the message(s).
+:[range]HimalayaFlagAdd     Add flags to the message(s).
+:[range]HimalayaFlagRemove  Remove flags from the message(s).
+:HimalayaAttachments        Download the attachments of the message.
+
+==============================================================================
+OPTIONS                                                     *himalaya-options*
+
+*g:himalaya_executable*       Path to the CLI, `himalaya` by default.
+*g:himalaya_config_path*      CLI configuration file(s), passed as --config.
+*g:himalaya_account_picker*   `native` or `fzf` (fzf.vim), `fzf` by default
+*g:himalaya_mailbox_picker*   when fzf.vim is installed.
+*g:himalaya_always_confirm*   Confirm moves and deletions, true by default.
+*g:himalaya_complete_contact_cmd*
+                            Command completing contacts with |i_CTRL-X_CTRL-U|
+                            in a writing buffer. `%s` is the search, and each
+                            output line holds an address, then optionally a
+                            tab and a name.
+
+==============================================================================
+MAPPINGS                                                   *himalaya-mappings*
+
+Each key maps a <Plug>(himalaya-...) mapping, skipped when that plug is
+already mapped.
+
+Listing ~
+  gA      account-select                   gm      mailbox-select
+  gp      mailbox-select-previous-page     gn      mailbox-select-next-page
+  g/      email-set-list-envelopes-query   <CR>    email-read
+  gw      email-write                      gr      email-reply
+  gf      email-forward                    ge      email-edit
+  ga      email-download-attachments       gD      email-delete
+  gC      email-select-mailbox-then-copy   gM      email-select-mailbox-then-move
+  gFa     email-flag-add                   gFr     email-flag-remove
+
+Copy, move, delete and flags also work on a visual selection. The reading
+buffer shares gw, gr, gf, ga, gC, gM and gD.
+
+==============================================================================
+WRITING                                                     *himalaya-writing*
+
+A writing buffer holds the From, To, Cc, Bcc and Subject headers, a blank
+line, then the plain text body. The signature is appended by the CLI.
+
+  ga      email-add-attachment             gA      email-attachments
+
+gA opens the attachment list, one path per line: edit it, then |:write| to
+apply it. |:write| in the writing buffer asks to send, save as a draft (in
+the mailbox the `drafts` alias resolves to) or cancel; |:quit!| discards.
+
+ vim:tw=78:ts=8:ft=help:norl:

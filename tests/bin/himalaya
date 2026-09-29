@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# Stub of the Himalaya CLI: logs its arguments, one call per line split
+# by the unit separator, then answers with a fixture.
+
+printf '%s\x1f' "$@" >> "$HIMALAYA_STUB_LOG"
+printf '\n' >> "$HIMALAYA_STUB_LOG"
+
+if [ -n "$HIMALAYA_STUB_FAIL" ]; then
+  echo '{"error":"Boom","sources":["root cause"],"backtrace":null}'
+  echo 'WARN something logged' >&2
+  exit 1
+fi
+
+args=" $* "
+next=0
+for arg in "$@"; do
+  [ "$next" = body ] && cp "$arg" "$HIMALAYA_STUB_LOG.body"
+  [ "$next" = dir ] && dir="$arg"
+  next=0
+  [ "$arg" = --body-file ] && next=body
+  [ "$arg" = --dir ] && next=dir
+done
+
+case "$args" in
+  *" account list "*)
+    echo '{"accounts":[{"name":"work","default":true,"backends":["imap"]}]}' ;;
+  *" envelope list "* | *" envelope search "*)
+    cat <<'TABLE'
+┌────┬───────┬─────────┬───────┬──────┬───────┐
+│ ID ┆ FLAGS ┆ SUBJECT ┆ FROM  ┆ DATE ┆ SIZE  │
+╞════╪═══════╪═════════╪═══════╪══════╪═══════╡
+│ 12 ┆ *     ┆ Réunion ┆ Alice ┆ 2026 ┆ 1 KiB │
+│ 13 ┆       ┆ a | b   ┆ Bob   ┆ 2026 ┆ 2 KiB │
+└────┴───────┴─────────┴───────┴──────┴───────┘
+TABLE
+    ;;
+  *" --send "* | *" --save "*)
+    echo 'Message successfully sent' ;;
+  *" message compose "* | *" message reply "* | *" message forward "*)
+    echo '{"from":"Me <me@example.org>","to":["Alice <a@example.org>"],"cc":[],"bcc":[],"subject":"Re: Réunion","body":"> hello\r\n"}' ;;
+  *" message read "*"--json"* | *"--json"*" message read "*)
+    echo '{"text_body":[1],"parts":[{"headers":[{"name":"from","value":{"Address":{"List":[{"name":"Me","address":"me@example.org"}]}}},{"name":"to","value":{"Address":{"List":[{"name":"Doe, J.","address":"j@example.org"}]}}},{"name":"subject","value":{"Text":"Draft"}},{"name":{"other":"X-Foo"},"value":{"Text":"bar"}}]},{"headers":[],"body":{"Text":"draft body\r\n"}}]}' ;;
+  *" attachment download "*)
+    touch "$dir/report.pdf"
+    echo "{\"attachments\":[{\"id\":\"3\",\"filename\":\"report.pdf\",\"size\":1,\"inline\":false,\"path\":\"$dir/report.pdf\"}]}" ;;
+  *)
+    echo 'ok' ;;
+esac
